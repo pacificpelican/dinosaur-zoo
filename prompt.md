@@ -4,7 +4,7 @@ Prompt for game: *Dinosaurs & Friends Zoo*
 - the "./art" folder in the current working directory may have some artworks/photos, if it does please consult those when designing the game
 ---
 
-**Dinosaur (& Friends) Zoo**
+**Dinosaurs (& Friends) Zoo**
 - a game where the player is a visitor to a zoo--a zoo that includes dinosaurs
 - The dinosaurs have a series of exhibits where they wander around, eat, bathe in their lagoon, and sleep, etc.
 - The game starts with a standard set of popular dinosaurs like Tyrannosaurus rex, triceratops, stegosaurus, brontosaurus, pterodactyl etc, but over time (as the game has a sort of clock and the animals have a life cycle) the zoo researches dinosaur DNA and rediscovers old species and also synthesizes new ones, this feature will be enhanced by AI when available
@@ -14,9 +14,9 @@ Prompt for game: *Dinosaurs & Friends Zoo*
 - The user should have an in-game camera and when they use it and take a picture it should be treated like a 'screenshot' and available for download 
 - Is it possible to use Babylon.js for the graphics for this game?  I was thinking, I would like for the dinosaurs to be the most sophisticated and complex graphical figures in this game and that framework supposedly has good color and shading stuff for dinosaurs and their feathers
 - you enter at the gate and pay for admission but you start with hundreds of dollars and should be able to afford the stuff for sale around the park including soda, funnel cakes, and the Brazil nuts that you can buy in front of the exhibit with the *Anchiornis huxleyi* or other small dinosaurs where you can go in and feed them petting-zoo style
-- there should be several exhibits and also a suspended cable car that the player can ride and get views of much of the park 
+- there should be several exhibits and also a suspended cable car that goes between two areas that the player can ride and get views of much of the park 
 - the dinosaurs should usually be docile but every once in a while can escape their habitats and chase NPCs around the park 
 - There should be a certain lumpiness in the distribution of NPCs if possible; for arbitrary reasons (or new dinosaur residents) certain exhibits will be especially popular and have clumps of visitors; also NPCs should be able to walk around in small groups around the zoo (even if the groups are arbitrary in their composition and temporary in their association); maybe this should be extended to the player who should be able to join groups at times; while in the group you have a group chat with all the NPCs that goes on
 - I have wanted to experiment with some different game frameworks and I had wanted to try using BabylonJS for this project; now I am not totally set on this as there may be better alternatives or better tools for what I want to do, it may actually be better to go with no framework, or a different one, but I am just suggesting that as a possibility, largely to see what it can do with color and detail in the animals (which I would like to emphasized, would like to target the dinosaurs and parakeets for having the best most colorful graphics in this game)
 - I would like the overall design of the game to be naturalistic and colorful with some influence from 90s video games and some influence from modernist painters like Chuck Close or Claude Monet
-- I would like a simple generative soundtrack that switches from "world music" style tracks to moderate BPM house music
+- I would like a simple generative soundtrack that switches from "world music" style tracks to moderate BPM house music; maybe there could be a couple channels to switch between in Settings
