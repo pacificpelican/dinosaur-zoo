@@ -9,7 +9,7 @@
     if (D.feathers) return D.feathers;
     const pos = [], col = [], idx = [], N = 6;
     for (let i = 0; i <= N; i++) {
-      const t = i / N, w = Math.sin(Math.PI * Math.pow(t, 0.75)) * 0.5 + (i === N ? 0 : 0.0), y = -0.12 * t * t;
+      const t = i / N, w = Math.max(0.03, Math.sin(Math.PI * Math.pow(t, 0.75)) * 0.5) * (i === N ? 0.15 : 1), y = -0.12 * t * t;
       pos.push(-w, y, t, w, y, t, 0, y + 0.012, t);
       const sh = 0.72 + 0.28 * t;
       col.push(sh * 0.9, sh * 0.9, sh * 0.9, 1, sh, sh, sh, 1, sh * 0.6, sh * 0.6, sh * 0.6, 1);
@@ -117,8 +117,8 @@
 
   // Thin-instanced feather patch over an ellipsoid-ish region.
   D.featherPatch = function (scene, parent, o) {
-    const proto = D.featherProto(scene), m = proto.clone('fp');
-    m.setEnabled(true); m.isVisible = true; m.parent = parent; m.material = o.mat; m.isPickable = false;
+    const proto = D.featherProto(scene), m = new B.Mesh('fp', scene);
+    m.parent = parent; m.material = o.mat; m.isPickable = false;
     const rng = Z.makeRng(o.seed || 7), cnt = Math.max(1, Math.round(o.count));
     const mats = new Float32Array(cnt * 16), cols = new Float32Array(cnt * 4);
     const tmp = B.Matrix.Identity(), ax = new B.Vector3(), ay = new B.Vector3(), az = new B.Vector3(), nn = new B.Vector3();
@@ -134,7 +134,7 @@
       ay.copyFrom(nn).subtractInPlace(az.scale(B.Vector3.Dot(nn, az))).normalize();
       B.Vector3.CrossToRef(ay, az, ax);
       const len = (o.lenMin + (o.lenMax - o.lenMin) * rng()), wid = len * (o.width || 0.32);
-      ax.scaleInPlace(wid); az.scaleInPlace(len);
+      ax.scaleInPlace(wid); az.scaleInPlace(len); ay.scaleInPlace(len);
       B.Matrix.FromXYZAxesToRef(ax, ay.clone(), az.clone(), tmp);
       tmp.setTranslation(new B.Vector3(px + ctr[0], py + ctr[1], pz + ctr[2]));
       tmp.copyToArray(mats, i * 16);
@@ -149,10 +149,23 @@
       const j = 0.9 + rng() * 0.2;
       cols[i * 4] = Z.clamp(c.r * j, 0, 1.2); cols[i * 4 + 1] = Z.clamp(c.g * j, 0, 1.2); cols[i * 4 + 2] = Z.clamp(c.b * j, 0, 1.2); cols[i * 4 + 3] = 1;
     }
-    m.thinInstanceSetBuffer('matrix', mats, 16, true);
-    m.thinInstanceSetBuffer('color', cols, 4, true);
-    m.thinInstanceRefreshBoundingInfo(true);
-    m.alwaysSelectAsActiveMesh = true;
+    // Bake instances into one static mesh (more robust than thin instances across GPUs/materials).
+    const pp = proto.getVerticesData(B.VertexBuffer.PositionKind), pn = proto.getVerticesData(B.VertexBuffer.NormalKind), pc = proto.getVerticesData(B.VertexBuffer.ColorKind), pi = proto.getIndices();
+    const nv = pp.length / 3, P = new Float32Array(cnt * nv * 3), N = new Float32Array(cnt * nv * 3), C = new Float32Array(cnt * nv * 4), I = new Uint32Array(cnt * pi.length);
+    for (let i = 0; i < cnt; i++) {
+      const q = mats.subarray(i * 16, i * 16 + 16);
+      for (let k = 0; k < nv; k++) {
+        const x = pp[k * 3], y = pp[k * 3 + 1], z = pp[k * 3 + 2], nx = pn[k * 3], ny = pn[k * 3 + 1], nz = pn[k * 3 + 2], o3 = (i * nv + k) * 3;
+        P[o3] = x * q[0] + y * q[4] + z * q[8] + q[12]; P[o3 + 1] = x * q[1] + y * q[5] + z * q[9] + q[13]; P[o3 + 2] = x * q[2] + y * q[6] + z * q[10] + q[14];
+        const tx = nx * q[0] + ny * q[4] + nz * q[8], ty = nx * q[1] + ny * q[5] + nz * q[9], tz = nx * q[2] + ny * q[6] + nz * q[10], tl = Math.hypot(tx, ty, tz) || 1;
+        N[o3] = tx / tl; N[o3 + 1] = ty / tl; N[o3 + 2] = tz / tl;
+        const c4 = (i * nv + k) * 4;
+        C[c4] = pc[k * 4] * cols[i * 4]; C[c4 + 1] = pc[k * 4 + 1] * cols[i * 4 + 1]; C[c4 + 2] = pc[k * 4 + 2] * cols[i * 4 + 2]; C[c4 + 3] = 1;
+      }
+      for (let k = 0; k < pi.length; k++) I[i * pi.length + k] = pi[k] + i * nv;
+    }
+    const vd = new B.VertexData();
+    vd.positions = P; vd.normals = N; vd.colors = C; vd.indices = I; vd.applyToMesh(m);
     return m;
   };
 

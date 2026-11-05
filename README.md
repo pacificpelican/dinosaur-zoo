@@ -1,22 +1,39 @@
-# Browser Game Template
+# Dinosaurs & Friends Zoo
 
-This repository is a starting point for designing and building a browser-based game. It contains a project prompt and a set of game-design standards; it does not yet include a playable game or application code.
+A browser game by Daniel McKeown ([altaredwood.work](https://altaredwood.work)), built to the Alta Redwood game-design standards in `spec/`. You are a visitor to a zoo whose residents are dinosaurs (and the very small dinosaurs known as parakeets). The brief is in [`prompt.md`](prompt.md).
 
-## Project files
+## Run it
 
-- [`prompt.md`](prompt.md) — Instructions for the game-design task. Replace `*GAME_TITLE*` with the chosen title and consult the standards before building.
-- [`spec/alta-redwood-standards-for-game-design-v2.md`](spec/alta-redwood-standards-for-game-design-v2.md) — Guidance for the intended architecture, controls, menus, settings, visual design, persistence, and exports.
-- `art/` — Optional location for project artwork. The prompt asks contributors to consult it if it exists.
+```
+php -S 127.0.0.1:8099 -t .
+```
 
-## Getting started
+then open <http://127.0.0.1:8099/index.html>. Any static file server also works: **PHP is optional**. Without it, saves go to `localStorage`, accounts are hidden, and dialogue uses the rule-based engine (Settings > Debug shows which mode is active).
 
-1. Choose a game title and update `*GAME_TITLE*` in `prompt.md`.
-2. Read the design standards in `spec/`.
-3. If an `art/` directory is present, review its contents and use relevant artwork to inform the game's visual direction.
-4. Use the prompt and standards to implement the game. Update this README with the actual setup, run, and test instructions when an application is added.
+Optional backend settings (storage driver, Ollama / cloud LLM) live in `config.php`; override them in an untracked `config.local.php` (see `config.local.example.php`).
 
-## Design direction
+## Play
 
-The standards describe a responsive desktop- and mobile-friendly browser game, with HTML5/JavaScript canvas as the frontend and PHP as the backend. They recommend local-first persistence with a path to MySQL/MariaDB, and a tiered NPC AI approach that can fall back to deterministic behavior.
+- Buy admission at the gate (box office, 9 am to 9 pm), then explore. A day is about 5 minutes open; the night fast-forwards. Sleep at Hotel Cretaceous (outside the gate) to skip to morning.
+- Walk up to the glass viewing windows and press `.` for a close-up. Buy Brazil nuts and feed the small dinosaurs in the petting pen. Ride the cable car. Fund research at the Genome Lab to rediscover or synthesize new species.
+- Talk to visitors, fans and tan-uniformed staff with `/`; join a group with `'`. Press `C` for the camera: shots are watermarked and downloadable.
+- Dinosaurs occasionally escape. Keep clear.
 
-They also outline shared conventions for touch and keyboard controls, pause and settings menus, screenshots and printable exports, account and save management, and visual direction. Treat these as design guidance for the game being built—not as features already implemented in this repository.
+| Key | Action |
+| --- | --- |
+| WASD / arrows, Shift | move, run |
+| Q / E or drag | rotate camera |
+| `/` | talk |
+| `.` / X / Enter | interact |
+| `,` | eat / drink |
+| `'` | select (join group, shutter) |
+| C, P, Esc | camera, phone (settings), pause |
+
+## Layout
+
+- `data/*.json`: world layout, species, dialogue (modular and editable)
+- `js/world.js` world and cable car, `js/dino.js` + `js/birds.js` procedural animals (Babylon.js), `js/entities.js` animals/visitors/groups/escapes, `js/ui.js`, `js/game.js`
+- `api/index.php`: status, accounts, saves, AI chat proxy (Ollama, cloud, or fallback)
+- `vendor/babylon.js`: vendored Babylon.js
+- `art/`: photographs and studies used for the parakeet window and species design
+- `viewer.html`: species gallery for development (`?sp=trex&state=walk`)

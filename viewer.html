@@ -9,7 +9,7 @@
   const q = new URLSearchParams(location.search), data = await Z.fetchJson('data/species.json');
   const all = data.base.concat(data.rediscovered), sp = all.find((s) => s.id === (q.get('sp') || 'trex')) || all[0];
   document.getElementById('bar').innerHTML = all.map((s) => '<a href="?sp=' + s.id + '&state=' + (q.get('state') || 'walk') + '">' + s.common + '</a>').join(' · ');
-  const engine = new BABYLON.Engine(document.getElementById('c'), true, { preserveDrawingBuffer: true }), scene = new BABYLON.Scene(engine);
+  const engine = new BABYLON.Engine(document.getElementById('c'), true, { preserveDrawingBuffer: true, alpha: false }), scene = new BABYLON.Scene(engine);
   scene.clearColor = new BABYLON.Color4(0.55, 0.45, 0.7, 1);
   const hl = new BABYLON.HemisphericLight('h', new BABYLON.Vector3(0.2, 1, 0.3), scene); hl.intensity = 0.9;
   const dl = new BABYLON.DirectionalLight('d', new BABYLON.Vector3(-0.5, -1, 0.6), scene); dl.intensity = 1.1;

@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Dinosaurs &amp; Friends Zoo</title>
+<meta name="description" content="A browser zoo game with dinosaurs, parakeets and a cable car. By Daniel McKeown - Alta Redwood.">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<canvas id="c" tabindex="0"></canvas>
+
+<div id="hud" class="hidden">
+  <div id="hudL">
+    <div class="chip" id="badge" title="Change your name in Settings > Account">Player 1</div>
+    <div class="chip" id="clock"></div>
+    <div class="chip" id="money"></div>
+  </div>
+  <div id="hudR">
+    <button class="rbtn" id="btnCam" title="Camera (C)" aria-label="Camera">&#128247;</button>
+    <button class="rbtn" id="btnMute" title="Mute / unmute" aria-label="Mute">&#9835;</button>
+    <button class="rbtn" id="btnPause" title="Pause (Esc)" aria-label="Pause">&#10074;&#10074;</button>
+  </div>
+  <div id="toasts"></div>
+  <div id="groupPanel" class="hidden"><h4><span>Group chat</span><button class="btn ghost" id="btnLeave">Leave</button></h4><div id="groupLog"></div></div>
+  <div id="prompt" class="hidden"></div>
+  <div id="pads">
+    <div id="dpad" aria-label="Directional pad">
+      <div class="arm h"></div><div class="arm v"></div><div class="nub"></div>
+      <i style="left:56px;top:6px">&#9650;</i><i style="left:56px;bottom:6px">&#9660;</i><i style="left:8px;top:54px">&#9664;</i><i style="right:8px;top:54px">&#9654;</i>
+    </div>
+    <div id="abtns">
+      <button class="abtn t" data-k="/" title="Talk (/)">/<small>TALK</small></button>
+      <button class="abtn r" data-k="." title="Interact (.)">.<small>DO</small></button>
+      <button class="abtn b" data-k="," title="Consume (,)">,<small>EAT</small></button>
+      <button class="abtn l" data-k="'" title="Select / Camera (')">'<small>SEL</small></button>
+    </div>
+  </div>
+</div>
+
+<div id="viewfinder" class="hidden"><span>Camera: press <b>'</b> or <b>.</b> to shoot &middot; C to put away</span></div>
+<div id="flash"></div>
+<div id="fade"></div>
+
+<!-- Title -->
+<div class="modal" id="mTitle">
+  <div class="card">
+    <svg class="logo" viewBox="0 0 520 150" role="img" aria-label="Dinosaurs and Friends Zoo">
+      <defs>
+        <linearGradient id="lg1" x1="0" x2="1"><stop offset="0" stop-color="#ff8a2b"/><stop offset="1" stop-color="#ffc247"/></linearGradient>
+        <linearGradient id="lg2" x1="0" x2="1"><stop offset="0" stop-color="#8c4bd6"/><stop offset="1" stop-color="#d8c2ff"/></linearGradient>
+      </defs>
+      <g transform="translate(260 128)" stroke="#ffc247" stroke-width="2" fill="none" opacity=".75">
+        <path d="M-230 0A230 230 0 0 1 230 0"/><path d="M-170 0A170 170 0 0 1 170 0"/><path d="M-110 0A110 110 0 0 1 110 0"/>
+        <path d="M0 0V-230M-70 0L-160 -165M70 0L160 -165M-120 0L-218 -70M120 0L218 -70"/>
+      </g>
+      <text x="260" y="62" text-anchor="middle" font-family="Copperplate, 'Gill Sans', 'Trebuchet MS', sans-serif" font-size="46" letter-spacing="6" fill="url(#lg1)" stroke="#2b1646" stroke-width="1.5">DINOSAURS</text>
+      <text x="260" y="104" text-anchor="middle" font-family="Copperplate, 'Gill Sans', 'Trebuchet MS', sans-serif" font-size="30" letter-spacing="5" fill="url(#lg2)" stroke="#2b1646" stroke-width="1">&amp; FRIENDS ZOO</text>
+      <path d="M200 124q30-20 60-4q30-16 60 4" stroke="#1fb5a8" stroke-width="4" fill="none"/>
+    </svg>
+    <p class="sub">A zoo where the dinosaurs never quite went extinct. Open 9 am &ndash; 9 pm.</p>
+    <div class="col">
+      <label class="row">Your name <input type="text" id="tName" maxlength="18" value="Player 1" style="flex:1"></label>
+      <button class="btn" id="btnNew">New Game &mdash; $300 to spend</button>
+      <button class="btn alt" id="btnContinue">Continue</button>
+      <button class="btn ghost" id="btnTitleSettings">Settings</button>
+    </div>
+    <p class="note" id="titleNote"></p>
+    <p class="note">Move: arrows / WASD &middot; Q/E rotate camera &middot; Shift run &middot; <span class="kbd">/</span> talk &middot; <span class="kbd">.</span> interact &middot; <span class="kbd">,</span> eat/drink &middot; <span class="kbd">'</span> select &middot; C camera &middot; Esc pause</p>
+    <p class="note">By <a style="color:#ffc247" href="https://altaredwood.work" target="_blank" rel="noopener">Daniel McKeown &middot; Alta Redwood</a></p>
+  </div>
+</div>
+
+<!-- Pause -->
+<div class="modal hidden" id="mPause">
+  <div class="card" style="width:min(340px,100%)">
+    <h2>Paused</h2>
+    <div class="col">
+      <button class="btn" id="pResume">Resume Game</button>
+      <button class="btn alt" id="pShot">Take Screenshot</button>
+      <button class="btn alt" id="pSettings">Settings</button>
+      <button class="btn ghost" id="pExit">Exit / Main Menu</button>
+    </div>
+  </div>
+</div>
+
+<!-- Settings phone -->
+<div class="modal hidden" id="mPhone">
+  <div class="card phone">
+    <div class="status"><span id="phTime"></span><span>Zoo Phone &#9679;&#9679;&#9679;</span></div>
+    <div class="tabs" id="phTabs"></div>
+    <div class="screen" id="phScreen"></div>
+    <div class="row" style="padding:6px;background:#1b0f2e;justify-content:center"><button class="btn" id="phClose">Close</button></div>
+  </div>
+</div>
+
+<!-- Dialogue -->
+<div class="modal hidden" id="mDialog">
+  <div class="card">
+    <h2 id="dlgTitle">Chat</h2>
+    <div id="dlgLog" aria-live="polite"></div>
+    <div class="chips" id="dlgChips"></div>
+    <form class="row" id="dlgForm" autocomplete="off"><input type="text" id="dlgInput" style="flex:1;min-width:140px" maxlength="200" placeholder="Say something..."><button class="btn" type="submit">Send</button></form>
+    <div class="row" style="justify-content:space-between">
+      <span class="note" id="dlgTier"></span>
+      <span><button class="btn alt" id="dlgJoin">Join group</button><button class="btn ghost" id="dlgPrint">Print / PDF</button><button class="btn" id="dlgClose">Close</button></span>
+    </div>
+  </div>
+</div>
+
+<!-- Viewing window -->
+<div id="winFrame" class="hidden"></div>
+<div id="winBar" class="hidden">
+  <div id="winInfo"></div>
+  <div class="col" style="min-width:150px">
+    <button class="btn" id="winShot">&#128247; Take photo</button>
+    <button class="btn alt" id="winFact">Next fact</button>
+    <button class="btn ghost" id="winClose">Step back (X)</button>
+  </div>
+  <div id="winPhotos"></div>
+</div>
+
+<!-- Screenshot preview -->
+<div class="modal hidden" id="mShot">
+  <div class="card">
+    <h2>Snapshot</h2>
+    <img id="shotImg" alt="Screenshot preview">
+    <div class="row" style="justify-content:center;margin-top:8px"><a class="btn" id="shotDl" download="dinosaurs-friends-zoo.png">Download / Save</a><button class="btn ghost" id="shotClose">Close</button></div>
+  </div>
+</div>
+
+<!-- Generic confirm / info -->
+<div class="modal hidden" id="mInfo">
+  <div class="card" style="width:min(420px,100%)">
+    <h2 id="infoTitle"></h2>
+    <div id="infoBody"></div>
+    <div class="row" id="infoBtns" style="justify-content:center;margin-top:8px"></div>
+  </div>
+</div>
+
+<script src="vendor/babylon.js"></script>
+<script src="js/util.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/store.js"></script>
+<script src="js/species.js"></script>
+<script src="js/ai.js"></script>
+<script src="js/dino.js"></script>
+<script src="js/birds.js"></script>
+<script src="js/world.js"></script>
+<script src="js/entities.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>
