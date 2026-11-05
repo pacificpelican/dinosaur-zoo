@@ -1,0 +1,53 @@
+{
+  "_comment": "Modular world layout. x east, z north (units ~0.5 m). Edit this file to rearrange the zoo.",
+  "park": {"x0": -80, "x1": 80, "z0": -30, "z1": 110, "gate": {"x": 0, "w": 8}},
+  "hours": {"open": 9, "close": 21},
+  "prices": {"admission": 25, "soda": 4, "funnel": 8, "nuts": 3, "cable": 5, "hotel": 40, "research": 120},
+  "spawn": {"x": 0, "z": -52},
+  "buildings": [
+    {"id": "box", "name": "Art Deco Box Office", "type": "boxoffice", "x": -11, "z": -39, "w": 14, "d": 8, "h": 7},
+    {"id": "box2", "name": "Staff Wing", "type": "boxoffice", "x": 11, "z": -39, "w": 14, "d": 8, "h": 7},
+    {"id": "hotel", "name": "Hotel Cretaceous", "type": "hotel", "x": -50, "z": -66, "w": 26, "d": 14, "h": 16},
+    {"id": "lab", "name": "Genome Research Lab", "type": "lab", "x": 0, "z": 50, "w": 24, "d": 18, "h": 7},
+    {"id": "parakeethouse", "name": "Parakeet House", "type": "budgiehouse", "x": -56, "z": 85, "w": 20, "d": 22, "h": 6}
+  ],
+  "exhibits": [
+    {"id": "steg", "name": "Stegosaur Glade", "rect": [-75, -8, -35, 26], "window": {"x": -35, "z": 9, "face": [1, 0]}, "view": "Wsteg", "popularity": 1.0, "pond": [-70, 12, -60, 22]},
+    {"id": "rex", "name": "T. rex Paddock", "rect": [-75, 34, -35, 66], "window": {"x": -35, "z": 50, "face": [1, 0]}, "view": "Wrex", "popularity": 1.6, "pond": [-70, 38, -62, 46]},
+    {"id": "trike", "name": "Triceratops Plains", "rect": [35, -8, 75, 26], "window": {"x": 35, "z": 9, "face": [-1, 0]}, "view": "Etrike", "popularity": 1.0, "pond": [62, 14, 72, 22]},
+    {"id": "petting", "name": "Anchiornis Walk-in Aviary", "rect": [36, 34, 76, 60], "gate": {"x": 36, "z": 47, "w": 6}, "view": "Eanch", "popularity": 1.3, "pond": [66, 52, 72, 58]},
+    {"id": "aviary", "name": "Pterosaur Aviary", "rect": [38, 72, 78, 100], "window": {"x": 38, "z": 86, "face": [-1, 0]}, "view": "Eav", "popularity": 1.1, "height": 16},
+    {"id": "parakeets", "name": "Parakeet House", "rect": [-52, 81, -47, 89], "window": {"x": -46, "z": 85, "face": [1, 0]}, "view": "Wbud", "popularity": 1.4, "height": 3.4, "inside": true},
+    {"id": "lagoon", "name": "Brontosaurus Lagoon", "rect": [-25, 78, 25, 106], "window": {"x": 0, "z": 78, "face": [0, -1]}, "view": "lagv", "popularity": 1.2, "pond": [-14, 84, 14, 100]},
+    {"id": "yardE", "name": "Rediscovery Yard", "rect": [7, -6, 27, 22], "window": {"x": 7, "z": 8, "face": [-1, 0]}, "view": "s1", "popularity": 0.8, "pond": [18, 14, 24, 20], "dynamic": "rediscovered"},
+    {"id": "yardW", "name": "Synthesis Yard", "rect": [-27, -6, -7, 22], "window": {"x": -7, "z": 8, "face": [1, 0]}, "view": "s1", "popularity": 0.8, "pond": [-24, 14, -18, 20], "dynamic": "synthesized"}
+  ],
+  "stands": [
+    {"id": "soda", "name": "Purple Pop Soda Stand", "item": "soda", "x": -13, "z": -17, "node": "sodaN", "color": "#7b3fa8"},
+    {"id": "funnel", "name": "Funnel Cake Wagon", "item": "funnel", "x": 13, "z": -17, "node": "funN", "color": "#e8731c"},
+    {"id": "nuts", "name": "Brazil Nut Kiosk", "item": "nuts", "x": 27, "z": 42, "node": "Eanch", "color": "#8a5a2a"}
+  ],
+  "cable": {
+    "a": {"name": "Gate Station", "x": 24, "z": -21, "board": {"x": 24, "z": -14}, "node": "stA"},
+    "b": {"name": "Lagoon Station", "x": -25, "z": 94, "board": {"x": -25, "z": 88}, "node": "stB"},
+    "height": 15,
+    "pylons": [[12, 24], [0, 36], [-8, 52], [-17, 70]]
+  },
+  "nodes": {
+    "gate": [0, -27], "s0": [0, -12], "s1": [0, 8], "plaza": [0, 30], "lab": [0, 36],
+    "W1": [-30, -12], "E1": [30, -12], "Wsteg": [-30, 9], "Etrike": [30, 9],
+    "W2": [-30, 30], "E2": [30, 30], "Wrex": [-30, 50], "Eanch": [30, 47],
+    "W3": [-30, 70], "E3": [30, 70], "c3": [0, 70], "lagv": [0, 72],
+    "Wbud": [-30, 85], "Eav": [30, 86],
+    "sodaN": [-13, -12], "funN": [13, -12], "stA": [24, -14], "stB": [-25, 88]
+  },
+  "edges": [
+    ["gate","s0"],["s0","s1"],["s1","plaza"],["plaza","lab"],
+    ["s0","sodaN"],["sodaN","W1"],["s0","funN"],["funN","E1"],["E1","stA"],
+    ["W1","Wsteg"],["Wsteg","W2"],["W2","Wrex"],["Wrex","W3"],["W3","Wbud"],["Wbud","stB"],
+    ["E1","Etrike"],["Etrike","E2"],["E2","Eanch"],["Eanch","E3"],["E3","Eav"],
+    ["plaza","W2"],["plaza","E2"],["W3","c3"],["c3","E3"],["c3","lagv"]
+  ],
+  "benches": [[-8, 30, 0], [8, 30, 0], [-5, -12, 0], [5, 6, 1.57], [-5, 6, 1.57], [-33, 40, 1.57], [33, 62, 1.57], [-8, 70, 0], [8, 70, 0], [33, 22, 1.57]],
+  "trees": 90
+}

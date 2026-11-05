@@ -1,0 +1,51 @@
+{
+  "_comment": "Deterministic fallback dialogue (Tier 3). Keys are matched against the player's words. {species} etc. are filled by the engine.",
+  "names": {
+    "first": ["Maya","Theo","Priya","Luis","Hana","Omar","Ellie","Jonas","Ruth","Kenji","Dara","Felix","Nia","Sam","Wren","Arlo","Tess","Ines","Cal","Mina","Otto","Bea","Rafi","June"],
+    "last": ["Okafor","Lindqvist","Moreno","Tanaka","Brandt","Silva","Haddad","Quinn","Novak","Reyes","Ito","Walsh"]
+  },
+  "greetings": {
+    "employee": ["Welcome to the zoo! I'm {name}, one of the keepers. Ask me anything about the animals.","Hi there! {name}, Guest Services and Paleo Care. What would you like to know?"],
+    "fan": ["Oh my gosh, a fellow dino person! I'm {name}. Did you know {fact}","{name} here. I've read every field guide in the gift shop twice. Ask me anything!"],
+    "normie": ["Hi! I'm {name}. This place is wild, right?","Hey. {name}. We're just here for the funnel cakes, honestly.","Oh hello! Are you also lost? I'm {name}."]
+  },
+  "topics": [
+    {"keys": ["hour","open","close","time","when"], "roles": ["employee"], "a": ["The park is open 9 am to 9 pm. After closing we fast-forward the night, and you can sleep at Hotel Cretaceous on the lawn to skip to morning.","We're open from nine to nine. At closing time the keepers escort guests back to the lawn outside the gate."]},
+    {"keys": ["hour","open","close","time","when"], "roles": ["fan","normie"], "a": ["I think it closes at nine tonight. Staff in tan will know for sure.","No idea! Check your phone clock, or ask a keeper in tan."]},
+    {"keys": ["escape","loose","chase","run","danger","safe"], "roles": ["employee"], "a": ["Rarely a resident decides the fence is more of a suggestion. Stay calm, move away, and the rangers calm the animal within a minute or so.","Escapes are uncommon and the animals are generally docile. If one is out, walk away quickly and do not feed it."]},
+    {"keys": ["escape","loose","chase","run","danger","safe"], "roles": ["fan","normie"], "a": ["I heard one got out last year! Honestly I'd love a photo. From a distance. A long distance.","Run. Just run. And take a picture first if you can."]},
+    {"keys": ["food","eat","hungry","cake","soda","nut","brazil","snack"], "a": ["The Purple Pop stand and Funnel Cake Wagon are on the south strip near the gate. Brazil nuts are sold at the kiosk by the Anchiornis walk-in aviary.","Funnel cakes by the entrance, soda too. Anchiornis adore Brazil nuts, so grab a scoop at the kiosk across from the walk-in aviary."]},
+    {"keys": ["cable","car","gondola","ride","view"], "a": ["The cable car runs between the Gate Station and the Lagoon Station, and gives wonderful views of the whole park. Tickets are five dollars.","Take the cable car! Board at the station by the funnel cake wagon. The view of the lagoon is the best."]},
+    {"keys": ["parakeet","budgie","budgerigar","bird","parrot"], "a": ["The Parakeet House is on the west side by the lagoon station. Press the action key at the viewing window for a close look. Budgies are tiny living dinosaurs!","Budgerigars descend from feathered theropods, so technically our parakeets are the smallest dinosaurs in the zoo."]},
+    {"keys": ["research","lab","dna","genome","new","species","discover","synthes","hybrid"], "a": ["Our Genome Lab recovers ancient proteins and rebuilds species. Some are rediscovered, others synthesized from several relatives. New residents appear in the Rediscovery and Synthesis Yards near the plaza.","Every day the lab makes progress. Visit the lab door by the plaza to fund research and speed up the next arrival."]},
+    {"keys": ["baby","hatch","egg","age","old","life","grow"], "a": ["Each animal has a life cycle: hatchling, juvenile, adult and elder. Hatchlings are fully fluffy and smaller, and the oldest residents retire to our sanctuary.","If you visit across several days you will see babies hatch and grow up."]},
+    {"keys": ["camera","photo","picture","screenshot","snap"], "a": ["Use the camera button to take a picture. It opens a preview with a download button. Every photo gets a watermark.","Photos are encouraged! Just no flash for the sleeping ones."]},
+    {"keys": ["hotel","sleep","night","bed","tired"], "a": ["Hotel Cretaceous is on the lawn outside the gate. Sleep there and you wake at nine the next morning.","After closing the night zooms by. The hotel lets you skip it entirely."]},
+    {"keys": ["feather","color","colour","purple","orange"], "a": ["Many theropods had feathers, and fossil pigment cells tell us their colors. Our designers are generous with purple and orange.","Feathers in color! Anchiornis was black and white with a rusty crest, and that comes straight from the fossils."]},
+    {"keys": ["thanks","thank","bye","goodbye"], "a": ["Anytime! Enjoy the zoo.","Take care, and watch out for loose raptors."]},
+    {"keys": ["hello","hi","hey"], "a": ["Hello again! What's on your mind?","Hi! Ask me about the dinosaurs, the park hours or snacks."]}
+  ],
+  "fallback": {
+    "employee": ["Good question. I will check with the research team. In the meantime, try asking about a species or the park hours.","I am not sure about that one. Ask me about the animals, food, the cable car, or the research lab."],
+    "fan": ["Hmm, that's outside my dinosaur expertise! Ask me about {species}, though. Did you know {fact}","Okay but have you heard that {fact}"],
+    "normie": ["Honestly no idea. Ask a keeper in the tan uniform!","Ha, good question. I just came for the snacks."]
+  },
+  "groupLines": [
+    "Did you see the {species}? It's enormous.",
+    "I want a funnel cake before we go anywhere else.",
+    "Which exhibit next? I vote {exhibit}.",
+    "My feet hurt, but the cable car is next, right?",
+    "Is it me or did that {species} just look right at us?",
+    "The parakeets are my favorite. Tiny dinosaurs!",
+    "Check out the colors on that one. Like a painting.",
+    "I heard one of them got out last week.",
+    "Let's take a group photo at the plaza.",
+    "Where's the nearest soda stand?",
+    "We should be at the lagoon by noon.",
+    "{exhibit} is packed. Let's wait a bit.",
+    "I can't believe there's a real {species} here."
+  ],
+  "panic": ["Run!","It's loose!","Dinosaur!","Get back!","AAAH!","Somebody call a ranger!"],
+  "joinReplies": ["Sure, come along!","Oh nice, the more the merrier.","Yeah, join us! We're heading to {exhibit}."],
+  "leaveReplies": ["Bye! See you around.","Catch you later!","Okay, have fun!"]
+}
