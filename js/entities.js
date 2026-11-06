@@ -34,7 +34,7 @@
     api.pose = (dt, walk, speed, extra) => {
       api.phase += dt * (2 + speed * 1.6) * (walk > 0.05 ? 1 : 0); const sw = Math.sin(api.phase * 2) * 0.75 * walk;
       hipL.rotation.x = sw; hipR.rotation.x = -sw; shL.rotation.x = -sw * 0.8 + (extra && extra.wave ? -2.6 : 0); shR.rotation.x = sw * 0.8;
-      root.getChildren()[0].position.y = 0; api.bob = Math.abs(Math.cos(api.phase * 2)) * 0.05 * walk;
+      api.bob = Math.abs(Math.cos(api.phase * 2)) * 0.05 * walk;
     };
     return api;
   };

@@ -133,11 +133,11 @@
     addEventListener('keydown', (e) => {
       if (e.key === 'Escape') { if (!$('mDialog').classList.contains('hidden')) return closeDialog(); if (G.win) return G.closeWindow(); if (!$('mPhone').classList.contains('hidden')) return U.hide('mPhone'); if (!$('mShot').classList.contains('hidden')) return U.hide('mShot'); if (!$('mInfo').classList.contains('hidden')) return U.hide('mInfo'); if (G.started && $('mTitle').classList.contains('hidden')) return U.show($('mPause').classList.contains('hidden') ? 'mPause' : 'mPause'); return; }
       if (typing()) return;
-      const k = e.key.length === 1 ? e.key.toLowerCase() : e.key; keys[k] = true; if (e.key === 'Shift') keys.shift = true;
-      if (['/', "'"].includes(k) || k === 'Enter') e.preventDefault();
-      if (!e.repeat && ['/', '.', ',', "'", 'x', 'c', 'Enter'].includes(k)) press(k);
+      const k = e.key.toLowerCase(); keys[k] = true; if (e.key === 'Shift') keys.shift = true;
+      if (['/', "'", 'enter', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(k)) e.preventDefault();
+      if (!e.repeat && ['/', '.', ',', "'", 'x', 'c', 'enter'].includes(k)) press(k);
     });
-    addEventListener('keyup', (e) => { const k = e.key.length === 1 ? e.key.toLowerCase() : e.key; keys[k] = false; if (e.key === 'Shift') keys.shift = false; });
+    addEventListener('keyup', (e) => { const k = e.key.toLowerCase(); keys[k] = false; if (e.key === 'Shift') keys.shift = false; });
     $('abtns').addEventListener('pointerdown', (e) => { const b = e.target.closest('[data-k]'); if (b) { e.preventDefault(); press(b.dataset.k); } });
     const dp = $('dpad'), upd = (e) => { const r = dp.getBoundingClientRect(), dx = (e.clientX - r.left) / r.width * 2 - 1, dy = (e.clientY - r.top) / r.height * 2 - 1, m = Math.hypot(dx, dy); if (m < 0.22) { pad.x = pad.y = 0; } else { pad.x = dx / Math.max(1, m); pad.y = dy / Math.max(1, m); } const nub = dp.querySelector('.nub'); if (nub) nub.style.transform = 'translate(' + pad.x * 22 + 'px,' + pad.y * 22 + 'px)'; };
     let dpActive = false; dp.addEventListener('pointerdown', (e) => { dpActive = true; dp.setPointerCapture(e.pointerId); upd(e); e.preventDefault(); });
