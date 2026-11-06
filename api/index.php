@@ -149,9 +149,8 @@ function aiComplete(array $c, string $tier, array $messages): ?string {
 }
 
 // ---------- request handling ----------
-session_set_cookie_params(['httponly' => true, 'samesite' => 'Lax']);
-if (!@session_start()) {
-    error_log('Zoo API: failed to start PHP session; check session storage configuration and permissions.');
+require_once __DIR__ . '/session.php';
+if (!zooStartSession(dirname(__DIR__), (bool)($CONFIG['session']['allow_webroot_fallback'] ?? false))) {
     out(['ok' => false, 'error' => 'The server could not start a session. Please contact the site administrator.'], 503);
 }
 $action = $_GET['action'] ?? 'status';

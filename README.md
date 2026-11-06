@@ -14,7 +14,9 @@ then open <http://127.0.0.1:8099/index.html>. Any static file server also works:
 
 Optional backend settings (storage driver, Ollama / cloud LLM) live in `config.php`; override them in an untracked `config.local.php` (see `config.local.example.php`).
 
-On shared hosting, account sign-in also requires working PHP sessions and browser cookies; a MySQL status alone does not verify session storage. If sign-in cannot be verified, check the host's PHP error log and its session save path and permissions. Do not expose credentials or session files in the web root.
+On shared hosting, account sign-in also requires working PHP sessions and browser cookies; a MySQL status alone does not verify session storage. For PHP's file-based session handler, the game tries an installation-specific directory under `tmp_sessions` above the document root, then an installation-specific system temporary directory, and finally the PHP-configured default. The PHP process must be able to create and write to one of these locations. If sign-in cannot be verified, check the host's PHP error log, directory permissions, and cookie settings.
+
+An optional `.sessions` directory in the project can be tried before the system temporary directory by setting `session.allow_webroot_fallback` to `true` in `config.local.php`. **Enable this only after verifying that the web server denies all access to that directory.** The game writes an Apache `.htaccess` deny rule, but it does not protect servers that ignore `.htaccess` (including PHP's built-in server); configure equivalent server-level protection if needed. Never serve session files publicly.
 
 ## Play
 

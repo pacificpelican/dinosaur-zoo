@@ -1,5 +1,6 @@
 storage/*
 !storage/.htaccess
 config.local.php
+.sessions/
 *.sqlite
 node_modules/

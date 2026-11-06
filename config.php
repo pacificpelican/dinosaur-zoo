@@ -8,6 +8,10 @@ return array_replace_recursive([
         'path'   => __DIR__ . '/storage', // keep outside the web root in production
         'mysql'  => ['host' => '127.0.0.1', 'port' => 3306, 'name' => '', 'user' => '', 'pass' => ''],
     ],
+    'session' => [
+        // Enable only after verifying that the web server denies access to .sessions.
+        'allow_webroot_fallback' => false,
+    ],
     'ai' => [
         'tier'   => 'auto', // auto | ollama | cloud | off
         'ollama' => ['url' => 'http://127.0.0.1:11434', 'model' => 'llama3.2'],
