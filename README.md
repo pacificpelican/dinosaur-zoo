@@ -1,5 +1,7 @@
 # Dinosaurs & Friends Zoo
 
+![Dinosaurs & Friends Zoo logo](assets/dinosaurs-friends-zoo-logo.svg)
+
 A browser game by Daniel McKeown ([altaredwood.work](https://altaredwood.work)), built to the Alta Redwood game-design standards in `spec/`. You are a visitor to a zoo whose residents are dinosaurs (and the very small dinosaurs known as parakeets). The brief is in [`prompt.md`](prompt.md).
 
 ## Run it

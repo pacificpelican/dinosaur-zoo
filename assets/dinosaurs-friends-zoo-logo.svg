@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 190" role="img" aria-labelledby="title desc">
+  <title id="title">Dinosaurs &amp; Friends Zoo</title>
+  <desc id="desc">A colorful palm tree and friendly dinosaur frame the zoo name.</desc>
+  <defs>
+    <linearGradient id="orange" x1="0" x2="1">
+      <stop offset="0" stop-color="#ff8a2b"/>
+      <stop offset="1" stop-color="#ffc247"/>
+    </linearGradient>
+    <linearGradient id="violet" x1="0" x2="1">
+      <stop offset="0" stop-color="#8c4bd6"/>
+      <stop offset="1" stop-color="#d8c2ff"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(88 172)">
+    <path d="M0 0Q15-50 4-99" fill="none" stroke="#8a5a2a" stroke-width="8" stroke-linecap="round"/>
+    <g fill="#1fb5a8">
+      <path d="M4-98Q-21-126-53-124Q-29-105 2-90Z"/>
+      <path d="M4-98Q-12-139-40-150Q-23-119 2-89Z"/>
+      <path d="M4-99Q2-141-13-161Q-12-128 2-89Z"/>
+      <path d="M5-99Q23-140 49-151Q33-119 7-89Z"/>
+      <path d="M5-98Q42-125 68-121Q39-103 7-90Z"/>
+    </g>
+    <g fill="#7ab05a">
+      <path d="M1-94Q-29-108-50-102Q-29-88 1-87Z"/>
+      <path d="M7-94Q31-112 55-106Q36-90 7-87Z"/>
+    </g>
+    <circle cx="2" cy="-91" r="5" fill="#ffc247"/>
+    <circle cx="10" cy="-92" r="4" fill="#ff8a2b"/>
+  </g>
+  <g transform="translate(644 30)" stroke="#2b1646" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M45 77Q35 66 40 52L54 40L68 42L78 31L91 31L99 42L113 47L120 61L111 72L101 71L98 62L82 61L79 75L72 88L72 128L61 128L58 91L48 91L42 128L30 128L34 87Z" fill="#1fb5a8" stroke-width="4"/>
+    <path d="M77 37Q83 19 99 23L111 34L104 44L92 43Z" fill="#1fb5a8" stroke-width="4"/>
+    <path d="M106 36L124 41L111 47L101 44Z" fill="#ff8a2b" stroke-width="3"/>
+    <circle cx="103" cy="33" r="2.8" fill="#2b1646" stroke="none"/>
+    <path d="M44 56Q24 47 16 54Q26 63 42 65" fill="#ffc247" stroke-width="3"/>
+    <path d="M47 54L41 40M56 50L54 34M66 49L69 34" fill="none" stroke="#ffc247" stroke-width="4"/>
+    <path d="M57 77L66 82L75 77" fill="none" stroke="#ffc247" stroke-width="3"/>
+  </g>
+  <text x="370" y="83" text-anchor="middle" font-family="Copperplate, 'Gill Sans', 'Trebuchet MS', sans-serif" font-size="46" letter-spacing="3" fill="url(#orange)" stroke="#2b1646" stroke-width="1.5">DINOSAURS</text>
+  <text x="370" y="126" text-anchor="middle" font-family="Copperplate, 'Gill Sans', 'Trebuchet MS', sans-serif" font-size="30" letter-spacing="3" fill="url(#violet)" stroke="#2b1646" stroke-width="1">&amp; FRIENDS ZOO</text>
+  <path d="M302 151Q336 128 370 147Q404 128 438 151" fill="none" stroke="#1fb5a8" stroke-width="5"/>
+</svg>

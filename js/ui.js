@@ -136,13 +136,15 @@
         '<p>The game is fictional. Animal behavior, species information, and any AI-generated conversations are simplified, may be inaccurate, and are not professional advice. Use the game at your own discretion. To the extent permitted by law, the game author is not liable for loss arising from use of the game.</p>' +
         '<p><b>Local and hosted use.</b> The game is designed primarily for play on a local machine. You may run it from local files or a local web server. If you access a hosted copy, the site operator is responsible for that site\'s operation, hosting, security, privacy notices, legal compliance, and any services or analytics it enables.</p>' +
         '<p>Optional accounts and server saves may be available on some hosted deployments; they are not required for local play. Availability and terms for those services are determined by the site operator. Keep backups of exported saves if your progress matters.</p>' +
-        '<p>These notes do not limit rights or remedies that cannot legally be excluded. &copy; Daniel McKeown.</p>';
+        '<p>These notes do not limit rights or remedies that cannot legally be excluded. &copy; Daniel McKeown.</p>' +
+        '<p class="note"><b>Last updated:</b> November 5, 2026.</p>';
     } else if (U.phoneTab === 'privacy') {
       h = '<h3>Privacy Policy</h3>' +
         '<p><b>Local play.</b> The game is designed primarily for your local machine. Game progress and camera-roll images are stored in this browser\'s local storage unless you export them. They are ordinarily available only to this browser profile and site origin; clearing browser data or changing browsers/devices may remove or make them unavailable.</p>' +
         '<p>The game itself does not include built-in analytics or telemetry. When you visit a hosted site, its web host may receive standard connection and request data (such as IP address, time, and requested files) in server logs. A site operator may also add analytics or other services; check that site\'s own privacy notice for what it collects and how to contact the operator.</p>' +
         '<p><b>Optional services.</b> Some hosted versions may offer accounts and server-side saves. If you choose to register or sign in, account information and saved game data are sent to and stored by that site\'s server under the operator\'s practices. If AI dialogue is enabled, messages you send may be processed by the configured AI service. Local/offline fallback dialogue does not require sending messages to an AI service.</p>' +
-        '<p>Services, retention, access, and deletion options vary by deployment. For questions or requests about data on a hosted site, contact that site\'s operator, who is responsible for the site and its integrations. For a local-only game, you can delete the browser save in Settings &gt; Save/Load or clear this site\'s browser storage.</p>';
+        '<p>Services, retention, access, and deletion options vary by deployment. For questions or requests about data on a hosted site, contact that site\'s operator, who is responsible for the site and its integrations. For a local-only game, you can delete the browser save in Settings &gt; Save/Load or clear this site\'s browser storage.</p>' +
+        '<p class="note"><b>Last updated:</b> November 5, 2026.</p>';
     }
     s.innerHTML = h;
     on('acSet', () => { G.name = ($('acName').value || 'Player 1').slice(0, 18); st.name = G.name; $('badge').textContent = G.name; U.toast('Name saved'); });
