@@ -160,7 +160,7 @@
   U.nextFact = function () { const w = U.win; if (!w || !w.facts.length) return; w.fi = (w.fi + 1) % w.facts.length; $('winFactText').textContent = w.facts[w.fi]; };
   U.closeWindow = function () { U.win = null; hide('winFrame'); hide('winBar'); };
 
-  U.shotPreview = function (url) { $('shotImg').src = url; $('shotDl').href = url; $('shotDl').download = 'dinosaurs-friends-zoo-' + Z.stamp().replace(/[^0-9a-z]+/gi, '-') + '.png'; show('mShot'); };
+  U.shotPreview = function (url) { $('shotImg').src = url; $('shotDl').href = url; $('shotDl').download = 'Dinosaurs_and_Friends_Zoo-' + Z.stamp().replace(/[^0-9a-z]+/gi, '-') + '.png'; show('mShot'); };
 
   // ---- Zoo Phone ----
   const TABS = [['acct', 'Account'], ['tv', 'ZooTV'], ['stats', 'Stats & Bank'], ['save', 'Save/Load'], ['ctl', 'Controls'], ['debug', 'Debug'], ['credits', 'Credits'], ['terms', 'Terms'], ['privacy', 'Privacy']];
