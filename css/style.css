@@ -103,7 +103,8 @@ label.chk { display: flex; gap: 6px; align-items: center; margin: 4px 0; }
 #dlgLog p { margin: 5px 0; line-height: 1.35; }
 #dlgLog .me { color: var(--gold); text-align: right; }
 #dlgLog .them b { color: var(--teal); }
-.ai-mark { display: inline-block; margin-left: 6px; color: var(--lilac); opacity: .68; font: 600 9px/1 var(--font); letter-spacing: .06em; vertical-align: .12em; }
+.ai-mark { display: inline-block; margin-left: 6px; color: #b7b7bf; opacity: .78; font: 600 9px/1 var(--font); letter-spacing: .06em; vertical-align: .12em; }
+.chat-tier { min-height: 14px; padding: 2px 6px; color: #a5a5ad; opacity: .82; font-size: 10px; line-height: 1.2; }
 .chips { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0; }
 .chips button { background: #33205a; color: var(--paper); border: 1px solid var(--violet); border-radius: 99px; padding: 3px 9px; font-size: 12px; }
 .role { font-size: 11px; border-radius: 6px; padding: 1px 6px; margin-left: 6px; color: var(--ink); background: var(--lilac); }

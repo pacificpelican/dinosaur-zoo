@@ -41,11 +41,27 @@
   };
   U.camDist = (n) => Math.hypot(n.x - Z.Game.player.x, n.z - Z.Game.player.z);
 
-  U.groupLog = function (name, line, ai) {
+  const TIER_LABELS = { ollama: 'Local Ollama', cloud: 'Cloud LLM', fallback: 'Rule-based fallback' };
+  const isAiTier = (tier) => tier === 'ollama' || tier === 'cloud';
+  const tierText = (tiers) => {
+    const labels = Array.from(tiers, (tier) => TIER_LABELS[tier] || tier);
+    return labels.length > 1 ? 'Reply engines: ' + labels.join(' · ') : labels.length ? 'Reply engine: ' + labels[0] : '';
+  };
+  U.groupLog = function (name, line, tier) {
     const l = $('groupLog'), p = document.createElement('p'), b = document.createElement('b'); b.textContent = name + ':'; p.appendChild(b); p.appendChild(document.createTextNode(' ' + line));
-    if (ai) addAiMark(p);
+    if (isAiTier(tier)) addAiMark(p);
+    if (tier) p.dataset.tier = tier;
     l.appendChild(p);
     while (l.children.length > 40) l.firstChild.remove(); l.scrollTop = l.scrollHeight;
+    if (tier && Z.Game.group) U.setGroupTier(tier);
+  };
+  U.setGroupTier = function (tier) {
+    const g = Z.Game.group; if (!g || !tier) return;
+    g.replyTiers = g.replyTiers || new Set();
+    g.replyTiers.add(tier);
+    const text = tierText(g.replyTiers);
+    $('groupTier').textContent = text;
+    if (U.dlg && U.dlg.group === g) $('dlgTier').textContent = text;
   };
 
   U.info = function (title, html, buttons) {
@@ -56,10 +72,11 @@
 
   // ---- dialogue ----
   const addAiMark = (p) => { const mark = document.createElement('small'); mark.className = 'ai-mark'; mark.textContent = 'AI'; mark.title = 'AI-generated response'; p.appendChild(mark); };
-  const logLine = (cls, who, text, ai) => {
+  const logLine = (cls, who, text, tier) => {
     const p = document.createElement('p'); p.className = cls;
     if (who) { const name = document.createElement('b'); name.textContent = who + ':'; p.appendChild(name); p.appendChild(document.createTextNode(' ')); }
-    p.appendChild(document.createTextNode(text)); if (ai) addAiMark(p);
+    p.appendChild(document.createTextNode(text)); if (isAiTier(tier)) addAiMark(p);
+    if (tier) p.dataset.tier = tier;
     $('dlgLog').appendChild(p); $('dlgLog').scrollTop = $('dlgLog').scrollHeight;
   };
   U.dialog = function (npc) {
@@ -77,22 +94,22 @@
     U.dlg = { npc: null, group: g, history: [], lines: [] };
     $('dlgTitle').textContent = 'Group chat (' + g.members.length + ' friends)'; $('dlgLog').innerHTML = ''; $('dlgChips').innerHTML = '';
     Array.from($('groupLog').children).forEach((p) => { const q = document.createElement('p'); q.className = 'them'; q.innerHTML = p.innerHTML; $('dlgLog').appendChild(q); });
-    $('dlgJoin').style.display = ''; $('dlgJoin').textContent = 'Leave group'; $('dlgTier').textContent = ''; show('mDialog'); setTimeout(() => $('dlgInput').focus(), 50);
+    $('dlgJoin').style.display = ''; $('dlgJoin').textContent = 'Leave group'; $('dlgTier').textContent = tierText(g.replyTiers || []); show('mDialog'); setTimeout(() => $('dlgInput').focus(), 50);
   };
   U.say = async function (text) {
     const d = U.dlg; if (!d || d.busy || !text.trim()) return; text = text.trim().slice(0, 200);
     logLine('me', Z.Game.name, text); d.lines.push([Z.Game.name, text]);
     if (d.group) { // group members answer in turn
       Z.Game.group.members.slice(0, 2).forEach((m, i) => setTimeout(async () => {
-        const reply = await Z.Talk.replyWithTier(m, text, []), ai = reply.tier === 'ollama' || reply.tier === 'cloud';
-        logLine('them', m.name, reply.text, ai); U.groupLog(Z.Game.name, text); U.groupLog(m.name, reply.text, ai); U.bubble(m, reply.text.slice(0, 80), 3000);
+        const reply = await Z.Talk.replyWithTier(m, text, []);
+        logLine('them', m.name, reply.text, reply.tier); U.groupLog(Z.Game.name, text); U.groupLog(m.name, reply.text, reply.tier); U.bubble(m, reply.text.slice(0, 80), 3000);
       }, 500 + i * 900));
       return;
     }
     d.busy = true; d.history.push({ role: 'user', content: text });
-    const reply = await Z.Talk.replyWithTier(d.npc, text, d.history), ai = reply.tier === 'ollama' || reply.tier === 'cloud';
+    const reply = await Z.Talk.replyWithTier(d.npc, text, d.history);
     d.history.push({ role: 'assistant', content: reply.text }); d.busy = false;
-    logLine('them', d.npc.name, reply.text, ai); d.lines.push([d.npc.name, reply.text]); $('dlgTier').textContent = 'Reply engine: ' + ({ ollama: 'Local Ollama', cloud: 'Cloud LLM', fallback: 'Rule-based fallback' }[reply.tier] || reply.tier);
+    logLine('them', d.npc.name, reply.text, reply.tier); d.lines.push([d.npc.name, reply.text]); $('dlgTier').textContent = tierText([reply.tier]);
   };
   U.printChat = function () {
     const d = U.dlg; if (!d) return; const w = window.open('', '_blank'); if (!w) { U.toast('Pop-up blocked: allow pop-ups to print.'); return; }

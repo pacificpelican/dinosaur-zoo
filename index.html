@@ -23,7 +23,7 @@
     <button class="rbtn" id="btnPause" title="Pause (Esc)" aria-label="Pause">&#10074;&#10074;</button>
   </div>
   <div id="toasts"></div>
-  <div id="groupPanel" class="hidden"><h4><span>Group chat</span><button class="btn ghost" id="btnLeave">Leave</button></h4><div id="groupLog"></div></div>
+  <div id="groupPanel" class="hidden"><h4><span>Group chat</span><button class="btn ghost" id="btnLeave">Leave</button></h4><div id="groupLog"></div><div id="groupTier" class="chat-tier"></div></div>
   <div id="prompt" class="hidden"></div>
   <div id="pads">
     <div id="dpad" aria-label="Directional pad">
@@ -131,7 +131,7 @@
     <div class="chips" id="dlgChips"></div>
     <form class="row" id="dlgForm" autocomplete="off"><input type="text" id="dlgInput" style="flex:1;min-width:140px" maxlength="200" placeholder="Say something..."><button class="btn" type="submit">Send</button></form>
     <div class="row" style="justify-content:space-between">
-      <span class="note" id="dlgTier"></span>
+      <span class="chat-tier" id="dlgTier"></span>
       <span><button class="btn alt" id="dlgJoin">Join group</button><button class="btn ghost" id="dlgPrint">Print / PDF</button><button class="btn" id="dlgClose">Close</button></span>
     </div>
   </div>
