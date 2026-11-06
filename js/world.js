@@ -287,7 +287,13 @@
     { const [x0, z0, x1, z1] = pk.rect; box(pk.cx, 0.2, pk.cz, x1 - x0, 0.1, z1 - z0, '#6aa84e'); box(x0 - 0.1, 0.2, pk.cz, 0.3, 3.4, z1 - z0, '#8ad0a0');
       const cg = B.MeshBuilder.CreateBox('cg', { width: 0.1, height: pk.height, depth: z1 - z0 }, scene); cg.position.set(x1, pk.height / 2 + 0.2, pk.cz); put(glass, cg, '#d8f0ff', 0.16);
       box(x1 + 0.2, 0.2, pk.cz, 0.3, 0.7, z1 - z0 + 0.4, '#5c2aa0');
-      pk.perches = []; for (let i = 0; i < 6; i++) { const px = Z.lerp(x0 + 0.8, x1 - 0.8, rng()), pz = Z.lerp(z0 + 0.8, z1 - 0.8, (i + 0.5) / 6), py = 0.9 + rng() * 2; const br = B.MeshBuilder.CreateCylinder('br', { height: 3, diameter: 0.14, tessellation: 5 }, scene); br.rotation.x = Math.PI / 2; br.rotation.y = (rng() - 0.5) * 0.8; br.position.set(px, py, pz); put(parts, br, '#7a5233'); pk.perches.push([px, py + 0.07, pz]); }
+      pk.perches = []; for (let i = 0; i < 6; i++) {
+        const px = Z.lerp(x0 + 0.8, x1 - 0.8, rng()), pz = Z.lerp(z0 + 0.8, z1 - 0.8, (i + 0.5) / 6), py = 0.9 + rng() * 2;
+        const br = B.MeshBuilder.CreateCylinder('br', { height: 3, diameter: 0.14, tessellation: 5 }, scene);
+        br.rotation.x = Math.PI / 2; br.rotation.y = (rng() - 0.5) * 0.8; br.position.set(px, py, pz); put(parts, br, '#7a5233');
+        br.computeWorldMatrix(true); const axis = br.getDirection(B.Axis.Y);
+        [-1.2, -0.6, 0, 0.6, 1.2].forEach((offset) => pk.perches.push([px + axis.x * offset, py + 0.07, pz + axis.z * offset]));
+      }
       box(x0 + 1.2, 0.2, z0 + 1, 1.2, 1.1, 1, '#ff8a2b'); box(x1 - 1.4, 0.2, z1 - 1, 1, 0.9, 1.4, '#8c4bd6'); cyl(pk.cx, 0.2, pk.cz, 0.8, 0.5, '#3aa6d4', 10); }
 
     // stands

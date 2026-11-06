@@ -40,13 +40,30 @@
   };
 
   // ---------- exhibit animals ----------
+  const BUDGIE_PERCH_SPACING = 0.45;
+  function chooseBudgiePerch(ex, current, rng, allowCrowded) {
+    const occupied = [];
+    E.animals.forEach((bird) => {
+      if (bird === current || bird.kind !== 'budgie' || bird.ex !== ex) return;
+      if (bird.perch !== undefined) occupied.push(ex.perches[bird.perch]);
+      if (bird.fly) occupied.push(bird.fly.b);
+    });
+    const candidates = ex.perches.map((p, index) => ({
+      index, distance: occupied.reduce((min, q) => Math.min(min, Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2])), Infinity)
+    })).filter((p) => !current || p.index !== current.perch);
+    const available = candidates.filter((p) => p.distance >= BUDGIE_PERCH_SPACING);
+    if (available.length) return available[Math.floor(rng() * available.length)].index;
+    if (!allowCrowded || !candidates.length) return null;
+    return candidates.reduce((best, p) => p.distance > best.distance ? p : best).index;
+  }
+
   function newAnimalActor(a, ex) {
     const sp = Z.Species.byId(a.sp); if (!sp) return null;
     const scale = Z.Species.scaleOf(a), seed = a.uid * 13 + 7;
     const api = Z.Dino.build(E.scene, sp, scale, seed, {});
     const r = ex.rect, rng = Z.makeRng(seed);
     const act = { a, sp, ex, api, kind: sp.form === 'budgie' ? 'budgie' : sp.form === 'pterosaur' ? 'ptero' : 'land', x: Z.lerp(r[0] + 5, r[2] - 5, rng()), z: Z.lerp(r[1] + 5, r[3] - 5, rng()), h: rng() * 6, mode: 'idle', timer: Z.rr(1, 5), st: { walk: 0, eat: 0, sleep: 0, bathe: 0, look: 0, roar: 0, speed: 1, fly: 0, perchY: 0 }, want: {}, seed, vis: true, scale };
-    if (act.kind === 'budgie') { act.perch = Math.floor(rng() * ex.perches.length); const p = ex.perches[act.perch]; act.x = p[0]; act.y = p[1]; act.z = p[2]; act.h = rng() * 6.28; act.fly = null; }
+    if (act.kind === 'budgie') { act.perch = chooseBudgiePerch(ex, null, rng, true); const p = ex.perches[act.perch]; act.x = p[0]; act.y = p[1]; act.z = p[2]; act.h = rng() * 6.28; act.fly = null; }
     if (act.kind === 'ptero') { act.ang = rng() * 6.28; act.rad = 6 + rng() * 8; act.alt = 7 + rng() * 6; act.dir = rng() < 0.5 ? 1 : -1; }
     if (sp.id === 'bronto') { act.x = ex.cx + (rng() - 0.5) * 12; act.z = ex.cz; }
     api.root.position.set(act.x, act.y || 0, act.z); return act;
@@ -116,8 +133,8 @@
       st.fly += (0 - st.fly) * Math.min(1, dt * 10); act.timer -= dt;
       st.chat = Math.sin(t * 0.8 + act.seed) > 0.82; st.look = Math.sin(t * 0.5 + act.seed * 2); st.preen = Math.sin(t * 0.23 + act.seed) > 0.85 ? 1 : 0;
       if (act.timer <= 0) {
-        const pi = Math.floor(Math.random() * ex.perches.length);
-        if (pi !== act.perch && Math.random() < 0.85) { const a = [act.x, act.y, act.z], b = ex.perches[pi]; act.fly = { a, b, t: 0, dur: 0.7 + Math.hypot(b[0] - a[0], b[2] - a[2]) * 0.18 }; act.fly2 = pi; Z.Audio && Math.random() < 0.15 && E.chirpNear && E.chirpNear(act); }
+        const pi = chooseBudgiePerch(ex, act, Math.random, false);
+        if (pi !== null && Math.random() < 0.85) { const a = [act.x, act.y, act.z], b = ex.perches[pi]; act.fly = { a, b, t: 0, dur: 0.7 + Math.hypot(b[0] - a[0], b[2] - a[2]) * 0.18 }; act.fly2 = pi; Z.Audio && Math.random() < 0.15 && E.chirpNear && E.chirpNear(act); }
         else act.timer = Z.rr(1.5, 6);
       }
     }
