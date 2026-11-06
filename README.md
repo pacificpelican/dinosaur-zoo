@@ -24,7 +24,7 @@ An optional `.sessions` directory in the project can be tried before the system 
 - Buy admission at the gate (box office, 9 am to 9 pm), then explore. A day is about 5 minutes open; the night fast-forwards. Sleep at Hotel Cretaceous (outside the gate) to skip to morning.
 - The ATM next to the box office lets you withdraw $100 at a time, up to $300 per in-game day, for extended visits.
 - Find another soda stand behind the Parakeet House near the lagoon, and look for the parked safari truck outside the Keepers' Wing.
-- Settings > Controls lets you slow daytime to one-third speed and skips gameplay nights from 10 pm to 9 am by default (you can turn this off); nighttime speed is otherwise unchanged. The night-skip setting and music choice are stored with the game save.
+- Settings > Controls lets you slow daytime to one-third speed and skips gameplay nights from 10 pm to 9 am by default (you can turn this off); nighttime speed is otherwise unchanged. Game speed, night skip, dinosaur escapes, music channel, volume and the on-screen controller setting are stored with the game save. Older saves without a setting retain the current choice on that device; the painterly filter is not part of game saves.
 - Walk up to the glass viewing windows and press `.` for a close-up. Buy Brazil nuts and feed the small dinosaurs in the petting pen. Ride the cable car. Fund research at the Genome Lab to rediscover or synthesize new species.
 - Talk to visitors, fans and tan-uniformed staff with `/`; join a group with `'`. Open the camera with `C` or the camera button, then press `'` to take a watermarked, downloadable shot.
 - On supported mobile browsers, the screenshot preview offers the system share sheet for the PNG. If image sharing is unavailable or fails, use Download / Save instead; desktop downloads are unchanged.
@@ -37,7 +37,7 @@ An optional `.sessions` directory in the project can be tried before the system 
 - In Settings > Account, a signed-in account shows its status and a log-out option instead of the login form. Settings > Save/Load lets you choose explicitly between a browser save and (when signed in) a server save.
 - Continue loads the server save first when signed in, falling back to the browser save with a notice if the server save is unavailable. Sign in through Settings on the title screen to access a server save. A server-save failure is reported even if the browser backup succeeds.
 - Saves include your approximate location and facing direction. The game autosaves about once a minute while playing and when you exit to the title; manual saves are available in Settings > Save/Load. A new game has no save until one of these occurs. If saved on a cable car, you resume at its destination station.
-- Dinosaurs occasionally escape by default. In Settings > Controls, turn off Dinosaur escapes to prevent them and return any escaped dinosaur to its habitat. This preference is saved in the current browser.
+- Dinosaurs occasionally escape by default. In Settings > Controls, turn off Dinosaur escapes to prevent them and return any escaped dinosaur to its habitat. The preference is saved with the game and in the current browser.
 - Settings includes Terms and Privacy tabs covering local play, hosted deployments, optional accounts, and possible host or AI-service data handling.
 
 | Key | Action |

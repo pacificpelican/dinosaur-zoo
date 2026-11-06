@@ -367,11 +367,12 @@
     if ($('ctCh')) {
       $('ctCh').value = Z.Audio.channel; $('ctCh').onchange = (e) => G.setMusicChannel(e.target.value);
       $('ctVol').oninput = (e) => Z.Audio.setVolume(+e.target.value);
+      $('ctVol').onchange = () => { if (G.started) G.save(); };
       $('ctPaint').onchange = (e) => G.setPainterly(e.target.checked);
-      $('ctPad').onchange = (e) => G.setPad(e.target.checked);
-      Array.from(s.querySelectorAll('input[name="gameSpeed"]')).forEach((input) => { input.onchange = () => { if (input.checked) G.setGameSpeed(input.value); }; });
+      $('ctPad').onchange = (e) => { G.setPad(e.target.checked); if (G.started) G.save(); };
+      Array.from(s.querySelectorAll('input[name="gameSpeed"]')).forEach((input) => { input.onchange = () => { if (input.checked) { G.setGameSpeed(input.value); if (G.started) G.save(); } }; });
       $('ctSimNight').onchange = (e) => G.setSimAwayNight(e.target.checked);
-      $('ctEscapes').onchange = (e) => G.setDinosaurEscapes(e.target.checked);
+      $('ctEscapes').onchange = (e) => { G.setDinosaurEscapes(e.target.checked); if (G.started) G.save(); };
     }
   };
 })(window.Z);

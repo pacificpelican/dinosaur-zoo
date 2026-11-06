@@ -36,16 +36,22 @@
   // ---------- state ----------
   G.snapshot = () => Object.assign({}, Z.state, {
     name: G.name, simAwayNight: G.simAwayNight, musicChannel: Z.Audio.channel,
+    gameSpeed: G.gameSpeed, dinosaurEscapes: G.dinosaurEscapes, volume: Z.Audio.volume, showPad: G.showPad,
     playerPosition: savedPlayerPosition(), savedAt: Date.now()
   });
   G.applyState = function (s) {
     const f = freshState(s.name); Z.state = Object.assign(f, s); Z.state.inv = Object.assign({ soda: 0, funnel: 0, nuts: 0 }, s.inv);
+    if (s.gameSpeed === 'default' || s.gameSpeed === 'relaxed') G.gameSpeed = s.gameSpeed;
+    if (typeof s.dinosaurEscapes === 'boolean') G.dinosaurEscapes = s.dinosaurEscapes;
+    if (Number.isFinite(s.volume) && s.volume >= 0 && s.volume <= 1) Z.Audio.setVolume(s.volume);
+    if (typeof s.showPad === 'boolean') G.setPad(s.showPad);
     G.simAwayNight = typeof s.simAwayNight === 'boolean' ? s.simAwayNight : prefs.simAwayNight;
     Z.state.simAwayNight = G.simAwayNight;
     const musicChannel = musicChannels.includes(s.musicChannel) ? s.musicChannel : Z.Audio.channel;
     Z.Audio.setChannel(musicChannel); Z.state.musicChannel = musicChannel;
     G.savePreferences();
     Z.state.custom = Z.state.custom || []; G.name = Z.state.name || 'Player 1'; $('badge').textContent = G.name;
+    if (E.escape) E.endEscape();
     Z.Species.syncUid(); E.rebuildAnimals(); G.leaveGroup(true); G.riding = null; if (G.win) G.closeWindow();
     W.setTime(Z.state.minutes); syncGate();
     const p = s.playerPosition;
