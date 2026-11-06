@@ -25,9 +25,13 @@
     c.fillStyle = bg; c.fillRect(0, 0, 512, dt.getSize().height);
     c.strokeStyle = fg; c.lineWidth = 8; c.strokeRect(8, 8, 496, dt.getSize().height - 16);
     c.fillStyle = fg; c.textAlign = 'center'; c.textBaseline = 'middle';
-    const lines = text.split('\n'), fs = (font || 78) / lines.length * (lines.length > 1 ? 1.15 : 1);
-    c.font = '700 ' + fs + 'px Copperplate, "Gill Sans", "Trebuchet MS", sans-serif';
-    lines.forEach((ln, i) => c.fillText(ln, 256, dt.getSize().height * (i + 1) / (lines.length + 1)));
+    const lines = text.split('\n'), height = dt.getSize().height, padding = 20;
+    let fs = Math.min((font || 78) / lines.length * (lines.length > 1 ? 1.15 : 1), (height - padding * 2) / lines.length);
+    const setFont = () => { c.font = '700 ' + fs + 'px Copperplate, "Gill Sans", "Trebuchet MS", sans-serif'; };
+    setFont();
+    const widest = Math.max(...lines.map((ln) => c.measureText(ln).width));
+    if (widest > 512 - padding * 2) { fs *= (512 - padding * 2) / widest; setFont(); }
+    lines.forEach((ln, i) => c.fillText(ln, 256, height / 2 + (i - (lines.length - 1) / 2) * fs));
     dt.update();
     const m = B.MeshBuilder.CreatePlane('sign', { width: w, height: h }, scene), mat = stdMat('signM', { disableLighting: true });
     mat.emissiveTexture = dt; mat.diffuseColor = new B.Color3(0, 0, 0); m.material = mat; m.position.set(x, y, z);
