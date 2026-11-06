@@ -3,11 +3,13 @@
   "park": {"x0": -80, "x1": 80, "z0": -30, "z1": 110, "gate": {"x": 0, "w": 8}},
   "hours": {"open": 9, "close": 21},
   "prices": {"admission": 25, "soda": 4, "funnel": 8, "nuts": 3, "cable": 5, "hotel": 40, "research": 120},
+  "atmDailyLimit": 300,
   "spawn": {"x": 0, "z": -52},
   "buildings": [
     {"id": "box", "name": "Art Deco Box Office", "type": "boxoffice", "x": -11, "z": -39, "w": 14, "d": 8, "h": 7},
     {"id": "box2", "name": "Staff Wing", "type": "boxoffice", "x": 11, "z": -39, "w": 14, "d": 8, "h": 7},
     {"id": "hotel", "name": "Hotel Cretaceous", "type": "hotel", "x": -50, "z": -66, "w": 26, "d": 14, "h": 16},
+    {"id": "atm", "name": "Hotel Cretaceous ATM", "type": "atm", "x": -32.5, "z": -57, "w": 2, "d": 1.1, "h": 2.5},
     {"id": "lab", "name": "Genome Research Lab", "type": "lab", "x": 0, "z": 50, "w": 24, "d": 18, "h": 7},
     {"id": "parakeethouse", "name": "Parakeet House", "type": "budgiehouse", "x": -56, "z": 85, "w": 20, "d": 22, "h": 6}
   ],

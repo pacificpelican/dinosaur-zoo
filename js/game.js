@@ -9,7 +9,7 @@
 
   const freshState = (name) => ({
     name: name || 'Player 1', money: 300, day: 1, minutes: 540, animals: Z.Species.freshAnimals(), custom: [], discovered: [], research: 30,
-    ticketDay: 0, inv: { soda: 0, funnel: 0, nuts: 0 }, discoveries: 0, hatched: 0, ate: 0, photos: 0
+    ticketDay: 0, inv: { soda: 0, funnel: 0, nuts: 0 }, discoveries: 0, hatched: 0, ate: 0, photos: 0, atmWithdrawnDay: 0, atmWithdrawn: 0
   });
   const isOpen = () => Z.state.minutes >= data.hours.open * 60 && Z.state.minutes < data.hours.close * 60;
   const inPark = (p) => p.x > W.data.park.x0 && p.x < W.data.park.x1 && p.z > W.data.park.z0 && p.z < W.data.park.z1;
@@ -74,6 +74,20 @@
     acts.push({ x: 0, z: -34, r: 5, label: () => Z.state.ticketDay === Z.state.day ? (isOpen() ? 'Gate: you have a ticket. Walk on in!' : 'The park is closed until 9 am') : (isOpen() ? 'Buy admission ($' + prices().admission + ')' : 'The box office opens at 9 am'),
       act: () => { const s = Z.state; if (s.ticketDay === s.day) return U.toast('You already have a ticket for today.'); if (!isOpen()) return U.toast('The park is closed.'); if (s.money < prices().admission) return U.toast('Not enough money.'); money(-prices().admission, 'Admission paid. Enjoy the zoo!'); s.ticketDay = s.day; Z.Audio.sfx('coin'); syncGate(); } });
     acts.push({ x: -50, z: -56.5, r: 4, label: () => 'Hotel Cretaceous: sleep until morning ($' + prices().hotel + ')', act: () => U.info('Hotel Cretaceous', 'Rest until 9 am the next day for $' + prices().hotel + '?', [{ label: 'Not yet', alt: true }, { label: 'Sleep', fn: G.sleep }]) });
+    const atm = W.data.buildings.find((b) => b.id === 'atm');
+    if (atm) acts.push({ x: atm.x, z: atm.z - atm.d / 2 - 1.6, r: 3.2,
+      label: () => 'Hotel ATM: withdraw cash (daily limit $' + W.data.atmDailyLimit + ')',
+      act: () => {
+        const s = Z.state, limit = W.data.atmDailyLimit, withdrawn = s.atmWithdrawnDay === s.day ? (s.atmWithdrawn || 0) : 0;
+        const remaining = Math.max(0, limit - withdrawn), amount = Math.min(100, remaining);
+        U.info('Hotel Cretaceous ATM', amount
+          ? 'Withdraw $' + amount + ' from your card? You can take out up to $' + limit + ' per day. Remaining today: $' + remaining + '.'
+          : 'You have reached today\'s $' + limit + ' withdrawal limit. Come back tomorrow.',
+        amount ? [{ label: 'Cancel', alt: true }, { label: 'Withdraw $' + amount, fn: () => {
+          s.atmWithdrawnDay = s.day; s.atmWithdrawn = withdrawn + amount; money(amount, 'Withdrew $' + amount + '. Daily ATM limit remaining: $' + (remaining - amount) + '.'); Z.Audio.sfx('coin');
+        } }] : [{ label: 'OK' }]);
+      }
+    });
     W.data.stands.forEach((s) => acts.push({ x: s.x, z: s.z + 1, r: 5.5, label: () => s.name + ': ' + s.item + ' $' + prices()[s.item], act: () => { const p = prices()[s.item]; if (Z.state.money < p) return U.toast('Not enough money.'); Z.state.inv[s.item]++; money(-p, 'Bought ' + s.item + (s.item === 'nuts' ? '. Feed the little dinosaurs in the petting pen!' : '. Press , to enjoy it.')); Z.Audio.sfx('coin'); } }));
     W.exhibits.forEach((e) => { if (e.window) acts.push({ x: e.window.x + e.window.face[0] * 2.6, z: e.window.z + e.window.face[1] * 2.6, r: 3.6, label: () => 'Look through the window: ' + e.name, act: () => G.openWindow(e) }); });
     const pet = W.exhibitById.petting; acts.push({ x: pet.cx, z: pet.cz, r: Math.max(pet.rect[2] - pet.rect[0], pet.rect[3] - pet.rect[1]) / 2 - 2, label: () => Z.state.inv.nuts ? 'Feed Brazil nuts to the little dinosaurs' : 'Buy Brazil nuts at the kiosk to feed them', act: () => { if (!Z.state.inv.nuts) return U.toast('You need Brazil nuts. Try the kiosk by the pen.'); Z.state.inv.nuts--; const n = E.feedPet(G.player.x, G.player.z); Z.Audio.sfx('chirp'); Z.popularityBoost('petting', 1.6); U.toast(n ? 'The little dinosaurs scamper over for nuts!' : 'Nobody is hungry.'); hud(); } });
