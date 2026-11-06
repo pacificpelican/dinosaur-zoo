@@ -136,11 +136,11 @@
     acts.push({ x: -50, z: -56.5, r: 4, label: () => 'Hotel Cretaceous: sleep until morning ($' + prices().hotel + ')', act: () => U.info('Hotel Cretaceous', 'Rest until 9 am the next day for $' + prices().hotel + '?', [{ label: 'Not yet', alt: true }, { label: 'Sleep', fn: G.sleep }]) });
     const atm = W.data.buildings.find((b) => b.id === 'atm');
     if (atm) acts.push({ x: atm.x, z: atm.z - atm.d / 2 - 1.6, r: 3.2,
-      label: () => 'Hotel ATM: withdraw cash (daily limit $' + W.data.atmDailyLimit + ')',
+      label: () => 'Box Office ATM: withdraw cash (daily limit $' + W.data.atmDailyLimit + ')',
       act: () => {
         const s = Z.state, limit = W.data.atmDailyLimit, withdrawn = s.atmWithdrawnDay === s.day ? (s.atmWithdrawn || 0) : 0;
         const remaining = Math.max(0, limit - withdrawn), amount = Math.min(100, remaining);
-        U.info('Hotel Cretaceous ATM', amount
+        U.info(atm.name, amount
           ? 'Withdraw $' + amount + ' from your card? You can take out up to $' + limit + ' per day. Remaining today: $' + remaining + '.'
           : 'You have reached today\'s $' + limit + ' withdrawal limit. Come back tomorrow.',
         amount ? [{ label: 'Cancel', alt: true }, { label: 'Withdraw $' + amount, fn: () => {

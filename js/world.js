@@ -154,6 +154,27 @@
     }
   }
 
+  function safariTruck(x, z) {
+    box(x, 0.7, z, 7, 1.25, 3.2, '#c6ad72');
+    box(x - 1.2, 1.9, z, 3.8, 0.3, 3.4, '#466b49');
+    box(x + 2, 1.9, z, 2.4, 1.1, 3.2, '#c6ad72');
+    box(x + 2.15, 2.35, z, 2.5, 0.16, 3.3, '#466b49');
+    box(x + 2.2, 2.05, z - 1.62, 1.5, 0.65, 0.08, '#93c9c4');
+    box(x + 2.2, 2.05, z + 1.62, 1.5, 0.65, 0.08, '#93c9c4');
+    box(x + 3.25, 2.05, z, 0.08, 0.65, 2.4, '#93c9c4');
+    for (const ox of [-2.4, 2.3]) for (const side of [-1, 1]) {
+      const wheel = B.MeshBuilder.CreateCylinder('truckWheel', { height: 0.55, diameter: 1.5, tessellation: 12 }, scene);
+      wheel.rotation.x = Math.PI / 2; wheel.position.set(x + ox, 0.75, z + side * 1.65); put(parts, wheel, '#282331');
+      const hub = B.MeshBuilder.CreateCylinder('truckHub', { height: 0.57, diameter: 0.55, tessellation: 10 }, scene);
+      hub.rotation.x = Math.PI / 2; hub.position.set(x + ox, 0.75, z + side * 1.65); put(parts, hub, '#d7c8aa');
+    }
+    for (const ox of [-2.7, -0.5]) for (const side of [-1, 1]) box(x + ox, 2.05, z + side * 1.3, 0.12, 1.2, 0.12, '#466b49');
+    box(x - 1.6, 3.25, z, 4, 0.15, 2.9, '#e8d8ae');
+    box(x + 3.55, 0.65, z, 0.22, 0.35, 3.4, '#403b38');
+    W.sign('ZOO SAFARI', 2.7, 0.45, x - 1.3, 1.35, z - 1.64, [0, -1], '#466b49', '#fff3e0', 40);
+    solid(x - 3.8, z - 2, x + 3.8, z + 2);
+  }
+
   // ---------- build ----------
   W.build = function (sc, data) {
     scene = sc; parts = []; glass = []; lit = []; signs = [];
@@ -285,6 +306,7 @@
         solid(x0, z0, x1, z1);
       }
     });
+    if (data.safariTruck) safariTruck(data.safariTruck.x, data.safariTruck.z);
 
     // exhibit case interior (parakeet house)
     const pk = W.exhibitById.parakeets; pk.interior = true;
@@ -315,6 +337,8 @@
       const x = Z.lerp(-150, 150, rng()), z = Z.lerp(-120, 150, rng());
       if (Math.abs(x) < P.x1 + 6 && z > P.z0 - 6 && z < P.z1 + 6) continue;
       if (Z.dist(x, z, 0, -50) < 14 || (Math.abs(x + 50) < 18 && Math.abs(z + 66) < 14)) continue;
+      if (data.buildings.some((b) => Math.abs(x - b.x) < b.w / 2 + 5 && Math.abs(z - b.z) < b.d / 2 + 5) ||
+          (data.safariTruck && Math.abs(x - data.safariTruck.x) < 9 && Math.abs(z - data.safariTruck.z) < 7)) continue;
       tree(x, z, rng, Math.floor(rng() * 4));
     }
     for (let i = 0; i < 70; i++) { // trees inside the park, off paths and exhibits
@@ -324,6 +348,23 @@
       if (data.edges.some(([a, b]) => { const A = data.nodes[a], C = data.nodes[b]; const t = Z.clamp(((x - A[0]) * (C[0] - A[0]) + (z - A[1]) * (C[1] - A[1])) / (Math.pow(C[0] - A[0], 2) + Math.pow(C[1] - A[1], 2)), 0, 1); return Z.dist(x, z, A[0] + (C[0] - A[0]) * t, A[1] + (C[1] - A[1]) * t) < 4.5; })) continue;
       tree(x, z, rng, Math.floor(rng() * 4)); W.solids.push([x - 0.5, z - 0.5, x + 0.5, z + 0.5]);
     }
+    const groveRng = Z.makeRng(836), groveTrees = [];
+    (data.treeGroves || []).forEach((grove) => {
+      for (let attempts = 0, placed = 0; attempts < grove.count * 100 && placed < grove.count; attempts++) {
+        const [x0, z0, x1, z1] = grove.rect, x = Z.lerp(x0, x1, groveRng()), z = Z.lerp(z0, z1, groveRng());
+        if (groveTrees.some((p) => Z.dist(x, z, p[0], p[1]) < 3.3) ||
+            W.solids.some((s) => Z.inRect(x, z, s, 2.5)) ||
+            W.exhibits.some((e) => Z.inRect(x, z, e.rect, 3)) ||
+            data.stands.some((s) => Z.dist(x, z, s.x, s.z) < 7) ||
+            data.edges.some(([a, b]) => {
+              const A = data.nodes[a], C = data.nodes[b], dx = C[0] - A[0], dz = C[1] - A[1];
+              const t = Z.clamp(((x - A[0]) * dx + (z - A[1]) * dz) / (dx * dx + dz * dz), 0, 1);
+              return Z.dist(x, z, A[0] + dx * t, A[1] + dz * t) < 5;
+            })) continue;
+        tree(x, z, groveRng, Math.floor(groveRng() * 4));
+        solid(x - 0.5, z - 0.5, x + 0.5, z + 0.5); groveTrees.push([x, z]); placed++;
+      }
+    });
     for (let i = 0; i < 18; i++) {
       const a = (i / 18) * Math.PI * 2 + rng() * 0.2, r = 230 + rng() * 40, hgt = 40 + rng() * 60;
       const m = B.MeshBuilder.CreateCylinder('mt', { height: hgt, diameterBottom: hgt * 2.4, diameterTop: hgt * 0.1, tessellation: 5 + Math.floor(rng() * 3) }, scene);

@@ -7,9 +7,9 @@
   "spawn": {"x": 0, "z": -52},
   "buildings": [
     {"id": "box", "name": "Art Deco Box Office", "type": "boxoffice", "x": -11, "z": -39, "w": 14, "d": 8, "h": 7},
-    {"id": "box2", "name": "Staff Wing", "type": "boxoffice", "x": 11, "z": -39, "w": 14, "d": 8, "h": 7},
+    {"id": "box2", "name": "Keepers' Wing", "type": "boxoffice", "x": 11, "z": -39, "w": 14, "d": 8, "h": 7},
     {"id": "hotel", "name": "Hotel Cretaceous", "type": "hotel", "x": -50, "z": -66, "w": 26, "d": 14, "h": 16},
-    {"id": "atm", "name": "Hotel Cretaceous ATM", "type": "atm", "x": -32.5, "z": -57, "w": 2, "d": 1.1, "h": 2.5},
+    {"id": "atm", "name": "Box Office ATM", "type": "atm", "x": -19.5, "z": -43.3, "w": 2, "d": 1.1, "h": 2.5},
     {"id": "lab", "name": "Genome Research Lab", "type": "lab", "x": 0, "z": 50, "w": 24, "d": 18, "h": 7},
     {"id": "parakeethouse", "name": "Parakeet House", "type": "budgiehouse", "x": -56, "z": 85, "w": 20, "d": 22, "h": 6}
   ],
@@ -27,7 +27,13 @@
   "stands": [
     {"id": "soda", "name": "Purple Pop Soda Stand", "item": "soda", "x": -13, "z": -17, "node": "sodaN", "color": "#7b3fa8"},
     {"id": "funnel", "name": "Funnel Cake Wagon", "item": "funnel", "x": 13, "z": -17, "node": "funN", "color": "#e8731c"},
-    {"id": "nuts", "name": "Brazil Nut Kiosk", "item": "nuts", "x": 27, "z": 42, "node": "Eanch", "color": "#8a5a2a"}
+    {"id": "nuts", "name": "Brazil Nut Kiosk", "item": "nuts", "x": 27, "z": 42, "node": "Eanch", "color": "#8a5a2a"},
+    {"id": "grove", "name": "Lagoon Soda Stand", "item": "soda", "x": -40, "z": 101, "node": "groveN", "color": "#1b8c81"}
+  ],
+  "safariTruck": {"x": 26, "z": -48},
+  "treeGroves": [
+    {"rect": [44, -26, 76, -14], "count": 20},
+    {"rect": [86, -62, 130, -33], "count": 38}
   ],
   "cable": {
     "a": {"name": "Gate Station", "x": 24, "z": -21, "board": {"x": 24, "z": -14}, "node": "stA"},
@@ -41,12 +47,13 @@
     "W2": [-30, 30], "E2": [30, 30], "Wrex": [-30, 50], "Eanch": [30, 47],
     "W3": [-30, 70], "E3": [30, 70], "c3": [0, 70], "lagv": [0, 72],
     "Wbud": [-30, 85], "Eav": [30, 86],
-    "sodaN": [-13, -12], "funN": [13, -12], "stA": [24, -14], "stB": [-25, 88]
+    "sodaN": [-13, -12], "funN": [13, -12], "stA": [24, -14], "stB": [-25, 88],
+    "grovePath": [-34, 98], "groveN": [-34, 105]
   },
   "edges": [
     ["gate","s0"],["s0","s1"],["s1","plaza"],["plaza","lab"],
     ["s0","sodaN"],["sodaN","W1"],["s0","funN"],["funN","E1"],["E1","stA"],
-    ["W1","Wsteg"],["Wsteg","W2"],["W2","Wrex"],["Wrex","W3"],["W3","Wbud"],["Wbud","stB"],
+    ["W1","Wsteg"],["Wsteg","W2"],["W2","Wrex"],["Wrex","W3"],["W3","Wbud"],["Wbud","stB"],["Wbud","grovePath"],["grovePath","groveN"],
     ["E1","Etrike"],["Etrike","E2"],["E2","Eanch"],["Eanch","E3"],["E3","Eav"],
     ["plaza","W2"],["plaza","E2"],["W3","c3"],["c3","E3"],["c3","lagv"]
   ],
