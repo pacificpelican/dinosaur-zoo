@@ -309,6 +309,7 @@
         const r = await Z.Net.api(action, { username, password });
         if (!r || r.ok !== true) { accountMessage(r && r.error ? r.error : 'Account request failed. Please try again.'); return; }
         const detected = await Z.Net.detect();
+        G.refreshContinue();
         if (!detected || !Z.Net.user) {
           accountMessage((action === 'register' ? 'Account created, but sign-in' : 'Sign-in') + ' could not be verified. Check that cookies are enabled and try logging in.');
         } else accountMessage(action === 'register' ? 'Account created and signed in.' : 'Signed in successfully.');
@@ -330,6 +331,7 @@
         const r = await Z.Net.api('logout', {});
         if (!r || r.ok !== true) { accountMessage(r && r.error ? r.error : 'Sign-out failed. Please try again.'); return; }
         const detected = await Z.Net.detect();
+        G.refreshContinue();
         accountMessage(!detected ? 'Sign-out could not be verified. Please check your connection.' : Z.Net.user ? 'Sign-out could not be verified. Please try again.' : 'Signed out.');
         if (U.phoneTab === 'acct' && !$('mPhone').classList.contains('hidden')) U.renderPhone();
       } catch (e) {
@@ -342,17 +344,24 @@
     });
     on('stFund', () => { G.fundResearch(); U.renderPhone(); });
     if ($('stGal')) $('stGal').onclick = (e) => { if (e.target.dataset.i) U.shotPreview(U.photos[+e.target.dataset.i]); };
-    on('svSave', async () => { const r = await G.save(); $('svMsg').textContent = r.ok ? 'Saved to ' + r.where + '.' : 'Save failed.'; });
+    on('svSave', async () => {
+      if (!G.started) { $('svMsg').textContent = 'Start or continue a game before saving.'; return; }
+      const r = await G.save(); if ($('svMsg')) $('svMsg').textContent = r.warning || (r.ok ? 'Saved to ' + r.where + '.' : 'Save failed.');
+    });
     const loadFrom = async (source) => {
       const r = await Z.Net.load(source);
       if (!r.state) { $('svMsg').textContent = r.error || 'No ' + source + ' save found.'; return; }
-      G.applyState(r.state); hide('mPhone'); U.toast('Loaded ' + source + ' save.');
+      try { G.enterLoadedState(r.state); hide('mPhone'); U.toast('Loaded ' + source + ' save.'); }
+      catch (e) { console.error('Could not apply saved game:', e); $('svMsg').textContent = 'Could not load the saved game. The save may be invalid.'; }
     };
     on('svLoadBrowser', () => loadFrom('browser'));
     on('svLoadServer', () => loadFrom('server'));
-    on('svDel', () => { Z.Net.clearLocal(); $('svMsg').textContent = 'Browser save deleted.'; });
-    on('svExp', () => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(G.snapshot())], { type: 'application/json' })); a.download = 'dfz-save.json'; a.click(); });
-    if ($('svImp')) $('svImp').onchange = (e) => { const f = e.target.files[0]; if (!f) return; f.text().then((t) => { try { G.applyState(JSON.parse(t)); hide('mPhone'); U.toast('Save imported'); } catch (x) { $('svMsg').textContent = 'Invalid file.'; } }); };
+    on('svDel', () => { Z.Net.clearLocal(); G.refreshContinue(); $('svMsg').textContent = 'Browser save deleted.'; });
+    on('svExp', () => {
+      if (!G.started) { $('svMsg').textContent = 'Start or continue a game before exporting.'; return; }
+      const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(G.snapshot())], { type: 'application/json' })); a.download = 'dfz-save.json'; a.click();
+    });
+    if ($('svImp')) $('svImp').onchange = (e) => { const f = e.target.files[0]; if (!f) return; f.text().then((t) => { try { G.enterLoadedState(JSON.parse(t)); hide('mPhone'); U.toast('Save imported'); } catch (x) { $('svMsg').textContent = 'Invalid file.'; } }); };
     on('svNew', () => U.info('Start a new game?', 'Your current progress will be replaced.', [{ label: 'Cancel', alt: true }, { label: 'New game', fn: () => { hide('mPhone'); G.newGame(); } }]));
     if ($('ctCh')) {
       $('ctCh').value = Z.Audio.channel; $('ctCh').onchange = (e) => G.setMusicChannel(e.target.value);

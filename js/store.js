@@ -32,29 +32,56 @@
   N.hasLocal = () => { try { return !!localStorage.getItem(KEY); } catch (e) { return false; } };
   N.clearLocal = () => { try { localStorage.removeItem(KEY); } catch (e) { /* ignore */ } };
 
-  // Returns {where: 'server'|'browser', ok}
+  let saveQueue = Promise.resolve();
   N.save = async function (state) {
     const local = N.saveLocal(state);
     if (N.php && N.user) {
-      try { const r = await N.api('save', { state }); if (r.ok) return { where: 'server', ok: true }; N.lastError = r.error || ''; } catch (e) { N.lastError = String(e.message || e); }
+      const user = N.user;
+      const request = saveQueue.then(async () => {
+        if (!N.php || N.user !== user) return { ok: false, error: 'The signed-in account changed before the server save.' };
+        try {
+          const r = await N.api('save', { state });
+          return r && r.ok === true ? { ok: true } : { ok: false, error: (r && r.error) || 'Server save failed.' };
+        } catch (e) { return { ok: false, error: 'Could not reach the server to save.' }; }
+      });
+      saveQueue = request.then(() => {});
+      const server = await request;
+      if (!server.ok) {
+        N.lastError = server.error;
+        return { where: 'browser', ok: local, warning: server.error + (local ? ' Progress was saved in this browser only.' : ' Browser save also failed.') };
+      }
+      return { where: 'server', ok: true, warning: local ? '' : 'Server save succeeded, but the browser backup failed.' };
     }
-    return { where: 'browser', ok: local };
+    return { where: 'browser', ok: local, warning: local ? '' : 'Could not save in this browser.' };
   };
   N.load = async function (source) {
-    if (source === 'browser') return { where: 'browser', state: N.loadLocal() };
+    if (source === 'browser') {
+      const state = N.loadLocal();
+      return { where: 'browser', state, error: state ? '' : (N.hasLocal() ? 'The browser save could not be read.' : 'No browser save found.') };
+    }
     if (source === 'server') {
-      if (!N.php || !N.user) return { where: 'server', state: null, error: 'Sign in to load a server save.' };
+      const user = N.user;
+      await saveQueue;
+      if (!N.php || !user) return { where: 'server', state: null, error: 'Sign in to load a server save.' };
+      if (N.user !== user) return { where: 'server', state: null, error: 'The signed-in account changed before the server load.' };
       try {
         const r = await N.api('load');
-        return r.ok && r.state ? { where: 'server', state: r.state } : { where: 'server', state: null, error: r.error || 'No server save found.' };
+        if (N.user !== user) return { where: 'server', state: null, error: 'The signed-in account changed during the server load.' };
+        if (!r || r.ok !== true) { N.lastError = (r && r.error) || 'Could not load the server save.'; return { where: 'server', state: null, error: N.lastError }; }
+        return r.state ? { where: 'server', state: r.state } : { where: 'server', state: null, error: 'No server save found.' };
       } catch (e) {
         N.lastError = String(e.message || e);
         return { where: 'server', state: null, error: 'Could not load the server save.' };
       }
     }
     if (N.php && N.user) {
-      try { const r = await N.api('load'); if (r.ok && r.state) return { where: 'server', state: r.state }; } catch (e) { /* fall back */ }
+      const r = await N.load('server');
+      if (r.state) return r;
+      const local = await N.load('browser');
+      return { where: 'browser', state: local.state, error: local.state ? '' : r.error + ' ' + local.error, warning: local.state ? r.error + ' Loaded the browser save instead.' : '' };
     }
-    const s = N.loadLocal(); return { where: 'browser', state: s };
+    const local = await N.load('browser');
+    if (!local.state) local.error += ' Sign in in Settings to access a server save.';
+    return local;
   };
 })(window.Z);

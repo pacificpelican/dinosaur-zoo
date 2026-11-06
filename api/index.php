@@ -27,9 +27,11 @@ class JsonStore extends Store {
     private function read(string $f): array {
         $p = "$this->dir/$f.php";
         if (!is_file($p)) return [];
-        $raw = (string)file_get_contents($p);
+        $raw = @file_get_contents($p);
+        if ($raw === false || strpos($raw, "\n") === false) throw new RuntimeException('Could not read local storage.');
         $d = json_decode(substr($raw, (int)strpos($raw, "\n") + 1), true);
-        return is_array($d) ? $d : [];
+        if (!is_array($d)) throw new RuntimeException('Invalid local storage.');
+        return $d;
     }
     private function write(string $f, array $d): void {
         $json = json_encode($d);
@@ -75,8 +77,10 @@ class SqlStore extends Store {
         return (int)$this->db->lastInsertId();
     }
     function saveGame(int $uid, string $json): void {
-        $this->db->prepare('DELETE FROM zoo_saves WHERE user_id = ?')->execute([$uid]);
-        $this->db->prepare('INSERT INTO zoo_saves (user_id, json, saved_at) VALUES (?, ?, ?)')->execute([$uid, $json, time()]);
+        $sql = $this->lbl === 'sqlite'
+            ? 'INSERT INTO zoo_saves (user_id, json, saved_at) VALUES (?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET json = excluded.json, saved_at = excluded.saved_at'
+            : 'INSERT INTO zoo_saves (user_id, json, saved_at) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE json = VALUES(json), saved_at = VALUES(saved_at)';
+        $this->db->prepare($sql)->execute([$uid, $json, time()]);
     }
     function loadGame(int $uid): ?string {
         $s = $this->db->prepare('SELECT json FROM zoo_saves WHERE user_id = ?'); $s->execute([$uid]);
@@ -90,17 +94,19 @@ class SqlStore extends Store {
 
 function openStore(array $c): Store {
     $s = $c['storage']; $m = $s['mysql']; $want = $s['driver'];
-    $hasMysql = $m['name'] !== '' && extension_loaded('pdo_mysql');
-    if (($want === 'mysql' || $want === 'auto') && $hasMysql) {
+    $useMysql = $want === 'mysql' || ($want === 'auto' && $m['name'] !== '');
+    if ($useMysql) {
+        if ($m['name'] === '' || !extension_loaded('pdo_mysql')) throw new RuntimeException('MySQL storage is not configured or available.');
         try {
             return new SqlStore(new PDO("mysql:host={$m['host']};port={$m['port']};dbname={$m['name']};charset=utf8mb4", $m['user'], $m['pass']), 'mysql');
-        } catch (Throwable $e) { /* fall through to local storage */ }
+        } catch (Throwable $e) { throw new RuntimeException('MySQL storage is unavailable.', 0, $e); }
     }
+    if ($want === 'sqlite' && !extension_loaded('pdo_sqlite')) throw new RuntimeException('SQLite storage is unavailable.');
     if (($want === 'sqlite' || $want === 'auto') && extension_loaded('pdo_sqlite')) {
         try {
             if (!is_dir($s['path'])) @mkdir($s['path'], 0775, true);
             return new SqlStore(new PDO('sqlite:' . $s['path'] . '/zoo.sqlite'), 'sqlite');
-        } catch (Throwable $e) { /* fall through */ }
+        } catch (Throwable $e) { throw new RuntimeException('SQLite storage is unavailable.', 0, $e); }
     }
     return new JsonStore($s['path']);
 }
@@ -161,7 +167,11 @@ if ($method === 'POST') {
     $in = json_decode(file_get_contents('php://input') ?: '[]', true) ?: [];
 }
 
-$store = openStore($CONFIG);
+try { $store = openStore($CONFIG); }
+catch (Throwable $e) {
+    error_log('Zoo API: configured storage unavailable (' . get_class($e) . ').');
+    out(['ok' => false, 'error' => 'The configured server storage is unavailable. Please contact the site administrator.'], 503);
+}
 $uid = (int)($_SESSION['uid'] ?? 0);
 $uname = (string)($_SESSION['uname'] ?? '');
 
@@ -214,12 +224,17 @@ switch ($action) {
         if (!$uid) out(['ok' => false, 'error' => 'Log in to save to the server.'], 401);
         $json = json_encode($in['state'] ?? null);
         if (!is_string($json) || strlen($json) > 2000000) out(['ok' => false, 'error' => 'Bad save.'], 400);
-        $store->saveGame($uid, $json); out(['ok' => true, 'at' => time()]);
+        try { $store->saveGame($uid, $json); }
+        catch (Throwable $e) { error_log('Zoo API: server save failed (' . get_class($e) . ').'); out(['ok' => false, 'error' => 'The server could not save your game.'], 500); }
+        out(['ok' => true, 'at' => time()]);
     }
     case 'load': {
         if (!$uid) out(['ok' => false, 'error' => 'Log in to load from the server.'], 401);
-        $j = $store->loadGame($uid);
-        out(['ok' => true, 'state' => $j === null ? null : json_decode($j, true)]);
+        try { $j = $store->loadGame($uid); }
+        catch (Throwable $e) { error_log('Zoo API: server save load failed (' . get_class($e) . ').'); out(['ok' => false, 'error' => 'The server could not load your game.'], 500); }
+        $state = $j === null ? null : json_decode($j, true);
+        if ($j !== null && !is_array($state)) { error_log('Zoo API: invalid server save data.'); out(['ok' => false, 'error' => 'The server save is invalid.'], 500); }
+        out(['ok' => true, 'state' => $state]);
     }
     case 'delete': {
         if (!$uid) out(['ok' => false, 'error' => 'Not logged in.'], 401);

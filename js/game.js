@@ -54,9 +54,18 @@
     } else placePlayer(0, -52, 0);
     syncCrowd(true); hud();
   };
-  G.save = async function () { const r = await Z.Net.save(G.snapshot()); return r; };
-  G.loadSaved = async function () { const r = await Z.Net.load(); if (!r.state) return false; G.applyState(r.state); return true; };
-  G.newGame = function () { G.applyState(freshState(G.name)); G.save(); U.toast('A new day begins at the Dinosaurs & Friends Zoo!'); };
+  G.save = async function () {
+    const r = await Z.Net.save(G.snapshot());
+    if (r.warning) U.toast(r.warning, !r.ok);
+    return r;
+  };
+  G.loadSaved = async function () { const r = await Z.Net.load(); if (r.state) G.applyState(r.state); return r; };
+  G.newGame = function () {
+    if (!G.started) Z.Audio.init();
+    G.applyState(freshState(G.name));
+    if (G.started) G.save(); else enterGame();
+    U.toast('A new day begins at the Dinosaurs & Friends Zoo!');
+  };
   G.fundResearch = function () {
     const c = prices().research; if (Z.state.money < c) { U.toast('Not enough cash for research.'); return; }
     Z.state.money -= c; Z.Audio.sfx('coin'); Z.Species.addResearch(50); Z.popularityBoost('lab', 3); U.toast('Research funded: +50 genome points'); hud();
@@ -76,13 +85,13 @@
     G.simAwayNight = !!enabled;
     Z.state.simAwayNight = G.simAwayNight;
     G.savePreferences();
-    G.save();
+    if (G.started) G.save();
   };
   G.setMusicChannel = function (channel) {
     if (!musicChannels.includes(channel)) return;
     Z.Audio.setChannel(channel);
     Z.state.musicChannel = channel;
-    G.save();
+    if (G.started) G.save();
   };
 
   function placePlayer(x, z, h) { G.player.x = x; G.player.z = z; G.player.h = h || 0; }
@@ -387,14 +396,30 @@
     if (scene.activeCamera !== cam) scene.activeCamera = cam;
     cam.detachControl();
     cam.alpha = -Math.PI / 2; cam.beta = 1.1; cam.radius = 70; cam.target.set(0, 4, 30);
-    const has = Z.Net.hasLocal() || Z.Net.user; $('btnContinue').style.display = has ? '' : 'none';
-    $('titleNote').textContent = Z.Net.php ? 'Backend: ' + Z.Net.storageLabel() + ' \u00b7 AI: ' + Z.Net.aiLabel() : 'No PHP backend found: playing offline. Saves stay in this browser.';
+    G.refreshContinue();
+    $('titleNote').textContent = Z.Net.php ? 'Backend: ' + Z.Net.storageLabel() + ' \u00b7 AI: ' + Z.Net.aiLabel() : (Z.Net.backendError ? Z.Net.backendError + ' Playing offline; saves stay in this browser.' : 'No PHP backend found: playing offline. Saves stay in this browser.');
     U.show('mTitle');
   }
+  G.refreshContinue = function () { $('btnContinue').style.display = Z.Net.hasLocal() || Z.Net.user ? '' : 'none'; };
+  function enterGame() {
+    U.hide('mTitle'); $('hud').classList.remove('hidden'); G.started = true; cam.upperRadiusLimit = 42; cam.beta = 1.1; cam.radius = 20; cam.alpha = -Math.PI / 2; cam.target.set(G.player.x, 1.4, G.player.z); cam.attachControl($('c'), true); lastSave = G.t;
+  }
+  G.enterLoadedState = function (state) { if (!G.started) Z.Audio.init(); G.applyState(state); if (!G.started) enterGame(); };
   async function startGame(isNew) {
     Z.Audio.init(); G.name = ($('tName').value || 'Player 1').slice(0, 18); $('badge').textContent = G.name;
-    if (isNew) { G.applyState(freshState(G.name)); } else { const ok = await G.loadSaved(); if (!ok) G.applyState(freshState(G.name)); }
-    U.hide('mTitle'); $('hud').classList.remove('hidden'); G.started = true; cam.upperRadiusLimit = 42; cam.beta = 1.1; cam.radius = 20; cam.alpha = -Math.PI / 2; cam.target.set(G.player.x, 1.4, G.player.z); cam.attachControl($('c'), true); lastSave = G.t;
+    if (isNew) { G.applyState(freshState(G.name)); } else {
+      $('btnContinue').disabled = true;
+      try {
+        const r = await G.loadSaved();
+        if (!r.state) { $('titleNote').textContent = r.error || 'Could not load the save.'; return; }
+        if (r.warning) U.toast(r.warning);
+      } catch (e) {
+        console.error('Could not load saved game:', e);
+        $('titleNote').textContent = 'Could not load the saved game. Try Settings > Save/Load or start a new game.';
+        return;
+      } finally { $('btnContinue').disabled = false; }
+    }
+    enterGame();
     U.toast('Welcome! Buy admission at the gate, then explore. Press P for your phone.');
   }
 

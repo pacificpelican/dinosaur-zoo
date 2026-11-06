@@ -13,6 +13,7 @@ php -S 127.0.0.1:8099 -t .
 then open <http://127.0.0.1:8099/index.html>. Any static file server also works: **PHP is optional**. Without it, saves go to `localStorage`, accounts are hidden, and dialogue uses the rule-based engine (Settings > Debug shows which mode is active).
 
 Optional backend settings (storage driver, Ollama / cloud LLM) live in `config.php`; override them in an untracked `config.local.php` (see `config.local.example.php`).
+If configured MySQL storage is unavailable, the server reports an error rather than silently switching account and save storage. Browser-only play remains available.
 
 On shared hosting, account sign-in also requires working PHP sessions and browser cookies; a MySQL status alone does not verify session storage. For PHP's file-based session handler, the game tries an installation-specific directory under `tmp_sessions` above the document root, then an installation-specific system temporary directory, and finally the PHP-configured default. The PHP process must be able to create and write to one of these locations. If sign-in cannot be verified, check the host's PHP error log, directory permissions, and cookie settings.
 
@@ -34,7 +35,8 @@ An optional `.sessions` directory in the project can be tried before the system 
 - Play Dino Dash on the phone: hold the right arrow or the run button to sprint, and release to recover stamina. Reach 300 meters before the dinosaur catches you. Switching tabs or closing the phone ends the run; it does not affect zoo progress.
 - Open ZooTV with the TV button in the upper-right HUD or the ZooTV phone tab to watch a selected animal wander, forage, rest, or fly around its habitat.
 - In Settings > Account, a signed-in account shows its status and a log-out option instead of the login form. Settings > Save/Load lets you choose explicitly between a browser save and (when signed in) a server save.
-- Saves include your approximate location and facing direction. The game autosaves about once a minute while playing and when you exit to the title; manual saves are available in Settings > Save/Load. If saved on a cable car, you resume at its destination station.
+- Continue loads the server save first when signed in, falling back to the browser save with a notice if the server save is unavailable. Sign in through Settings on the title screen to access a server save. A server-save failure is reported even if the browser backup succeeds.
+- Saves include your approximate location and facing direction. The game autosaves about once a minute while playing and when you exit to the title; manual saves are available in Settings > Save/Load. A new game has no save until one of these occurs. If saved on a cable car, you resume at its destination station.
 - Dinosaurs occasionally escape. Keep clear.
 - Settings includes Terms and Privacy tabs covering local play, hosted deployments, optional accounts, and possible host or AI-service data handling.
 
