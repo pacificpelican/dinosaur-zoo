@@ -161,7 +161,7 @@
     if (G.group) return;
     const g = npc.group || E.formGroup(npc, Z.pick([1, 2]));
     if (!g) { U.toast(npc.name + ' prefers to explore solo.'); return; }
-    g.player = true; g.until = Infinity; g.replyTiers = new Set(); g.chatHistory = []; g.chatBusy = false; G.group = g; $('groupLog').innerHTML = ''; $('groupTier').textContent = ''; $('groupPanel').classList.remove('hidden');
+    g.player = true; g.until = Infinity; g.replyTiers = new Set(); g.chatHistory = []; g.messages = []; g.chatBusy = false; G.group = g; $('groupLog').innerHTML = ''; $('groupTier').textContent = ''; $('groupPanel').classList.remove('hidden');
     const m = g.members[0]; const l = Z.Talk.joinReply(); U.groupLog(m.name, l); U.bubble(m, l, 3000); U.toast('You joined a group of ' + (g.members.length) + '. Press / to chat.');
   };
   G.leaveGroup = function (quiet) {

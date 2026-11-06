@@ -47,13 +47,17 @@
     const labels = Array.from(tiers, (tier) => TIER_LABELS[tier] || tier);
     return labels.length > 1 ? 'Reply engines: ' + labels.join(' · ') : labels.length ? 'Reply engine: ' + labels[0] : '';
   };
-  U.groupLog = function (name, line, tier) {
+  U.groupLog = function (name, line, tier, isPlayer) {
+    const g = Z.Game.group; if (!g) return;
+    const message = [name, line, tier, !!isPlayer];
+    g.messages.push(message);
     const l = $('groupLog'), p = document.createElement('p'), b = document.createElement('b'); b.textContent = name + ':'; p.appendChild(b); p.appendChild(document.createTextNode(' ' + line));
     if (isAiTier(tier)) addAiMark(p);
     if (tier) p.dataset.tier = tier;
     l.appendChild(p);
     while (l.children.length > 40) l.firstChild.remove(); l.scrollTop = l.scrollHeight;
-    if (tier && Z.Game.group) U.setGroupTier(tier);
+    if (U.dlg && U.dlg.group === g) logLine(isPlayer ? 'me' : 'them', name, line, tier);
+    if (tier) U.setGroupTier(tier);
   };
   U.setGroupTier = function (tier) {
     const g = Z.Game.group; if (!g || !tier) return;
@@ -93,23 +97,17 @@
   };
   U.groupDialog = function () {
     const g = Z.Game.group; if (!g) return;
-    U.dlg = { npc: null, group: g, history: [], lines: [] };
+    U.dlg = { npc: null, group: g, history: [], lines: g.messages };
     $('dlgTitle').textContent = 'Group chat (' + g.members.length + ' friends)'; $('dlgLog').innerHTML = ''; $('dlgChips').innerHTML = '';
-    Array.from($('groupLog').children).forEach((p) => {
-      const q = document.createElement('p'); q.className = 'them'; q.innerHTML = p.innerHTML; $('dlgLog').appendChild(q);
-      const name = p.querySelector('b'), copy = p.cloneNode(true);
-      copy.querySelectorAll('b, .ai-mark').forEach((el) => el.remove());
-      U.dlg.lines.push([name ? name.textContent.replace(/:$/, '') : '', copy.textContent.trim(), p.dataset.tier || '']);
-    });
+    g.messages.forEach((line) => logLine(line[3] ? 'me' : 'them', line[0], line[1], line[2]));
     setChatBusy(!!g.chatBusy);
     $('dlgJoin').style.display = ''; $('dlgJoin').textContent = 'Leave group'; $('dlgTier').textContent = tierText(g.replyTiers || []); show('mDialog'); setTimeout(() => $('dlgInput').focus(), 50);
   };
   U.say = async function (text) {
     const d = U.dlg; if (!d || d.busy || (d.group && d.group.chatBusy) || !text.trim()) return; text = text.trim().slice(0, 200);
-    logLine('me', Z.Game.name, text); d.lines.push([Z.Game.name, text]);
     if (d.group) {
       const g = d.group, history = g.chatHistory || (g.chatHistory = []), replies = [];
-      g.chatBusy = true; setChatBusy(true); U.groupLog(Z.Game.name, text);
+      g.chatBusy = true; setChatBusy(true); U.groupLog(Z.Game.name, text, null, true);
       let failed = false;
       try {
         for (const m of g.members.slice(0, 2)) {
@@ -119,8 +117,6 @@
           if (Z.Game.group !== g) break;
           if (reply.error && !failed) { U.toast('AI reply unavailable; using rule-based dialogue. See Debug for details.'); failed = true; }
           U.groupLog(m.name, reply.text, reply.tier); U.bubble(m, reply.text.slice(0, 80), 3000);
-          const active = U.dlg;
-          if (active && active.group === g) { active.lines.push([m.name, reply.text, reply.tier]); logLine('them', m.name, reply.text, reply.tier); }
           replies.push({ role: 'assistant', text: m.name + ': ' + reply.text });
         }
         if (replies.length) history.push({ role: 'user', text }, ...replies);
@@ -130,6 +126,7 @@
       }
       return;
     }
+    logLine('me', Z.Game.name, text); d.lines.push([Z.Game.name, text]);
     d.busy = true; setChatBusy(true);
     try {
       const reply = await Z.Talk.replyWithTier(d.npc, text, d.history);
