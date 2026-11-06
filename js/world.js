@@ -277,7 +277,7 @@
         box(x, 0, z, w, 0.2, d, '#d9a98a'); box(x0 + 0.4, 0, z, 0.8, h, d, '#ffd9b0'); box(x, 0, z0 + 0.4, w, h, 0.8, '#ffd9b0'); box(x, 0, z1 - 0.4, w, h, 0.8, '#ffd9b0');
         box(x, h, z, w + 1.4, 0.8, d + 1.4, '#8c4bd6'); box(x, h + 0.8, z, w - 2, 1.4, d - 2, '#ff8a2b');
         box(x1 - 0.1, h - 0.7, z, 0.4, 0.7, d, '#ffc247'); box(x1 - 0.1, 0, z0 + 0.8, 0.4, h, 0.8, '#ffc247'); box(x1 - 0.1, 0, z1 - 0.8, 0.4, h, 0.8, '#ffc247'); const gl = B.MeshBuilder.CreateBox('g', { width: 0.12, height: h - 0.6, depth: d - 1 }, scene); gl.position.set(x1 - 0.1, h / 2 + 0.2, z); put(glass, gl, '#bfe8ff', 0.18);
-        W.sign('PARAKEET HOUSE', 7.6, 1.2, x1 + 0.35, h + 0.7 - 0.3 + 0.3, z, [1, 0], '#2b1646', '#ffc247', 52);
+        W.sign('PARAKEET HOUSE', 7.6, 1.2, x1 + 0.8, h + 0.7, z, [1, 0], '#2b1646', '#ffc247', 52);
         solid(x0, z0, x1, z1);
       }
     });

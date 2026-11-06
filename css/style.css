@@ -125,9 +125,7 @@ label.chk { display: flex; gap: 6px; align-items: center; margin: 4px 0; }
 #winActions { min-width: 150px; gap: 4px; }
 #winPhotos { display: flex; flex: 1 1 100%; min-width: 0; gap: 6px; overflow-x: auto; max-width: 100%; touch-action: pan-x; }
 #winPhotos:empty { display: none; }
-#winPhotos figure { flex: 0 0 104px; width: 104px; margin: 0; }
-#winPhotos img { display: block; width: 104px; height: 78px; object-fit: cover; border: 2px solid var(--gold); border-radius: 6px; cursor: pointer; }
-#winPhotos figcaption { margin-top: 3px; font-size: 11px; line-height: 1.2; color: var(--paper); }
+#winPhotos img { display: block; flex: 0 0 104px; width: 104px; height: 78px; object-fit: cover; border: 2px solid var(--gold); border-radius: 6px; cursor: pointer; }
 #shotImg { width: 100%; border: 3px solid var(--gold); border-radius: 8px; }
 
 @media (max-width: 640px) {
