@@ -83,7 +83,7 @@
   };
 
   // ---- viewing window ----
-  const PHOTOS = ['Ava-3293561590_3cbda89e76.1e41789a.jpg', 'Bogey.4077a857.jpg', 'Dodger-4887734382_6a6efc744a_z.053d0110.jpg', 'Striker--close-up-2010-by-DanielJMcKeown.jpg', 'Sparty-by-Jessica--April2010-byDanielJMcKeown.jpg', 'Belle-the-parakeet-by-JessicaMcKeown-9-10-2010.jpg'];
+  const PHOTOS = ['Ava-3293561590_3cbda89e76.1e41789a.jpg', 'Bogeys_11th_Gotcha_Day__artwork_2025.jpg', 'Dodger-4887734382_6a6efc744a_z.053d0110.jpg', 'Striker--close-up-2010-by-DanielJMcKeown.jpg', 'Sparty-by-Jessica--April2010-byDanielJMcKeown.jpg', 'Belle-the-parakeet-by-JessicaMcKeown-9-10-2010.jpg'];
   U.openWindow = function (ex) {
     const list = Z.Species.animalsIn(ex.id), names = {}; list.forEach((a) => { const sp = Z.Species.byId(a.sp); (names[sp.id] = names[sp.id] || { sp, n: 0 }).n++; });
     const entries = Object.values(names); U.win = { ex, entries, fi: 0, facts: [] };
