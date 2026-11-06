@@ -35,8 +35,10 @@
   };
   U.camDist = (n) => Math.hypot(n.x - Z.Game.player.x, n.z - Z.Game.player.z);
 
-  U.groupLog = function (name, line) {
-    const l = $('groupLog'), p = document.createElement('p'); p.innerHTML = '<b>' + Z.esc(name) + ':</b> ' + Z.esc(line); l.appendChild(p);
+  U.groupLog = function (name, line, ai) {
+    const l = $('groupLog'), p = document.createElement('p'), b = document.createElement('b'); b.textContent = name + ':'; p.appendChild(b); p.appendChild(document.createTextNode(' ' + line));
+    if (ai) addAiMark(p);
+    l.appendChild(p);
     while (l.children.length > 40) l.firstChild.remove(); l.scrollTop = l.scrollHeight;
   };
 
@@ -47,7 +49,13 @@
   };
 
   // ---- dialogue ----
-  const logLine = (cls, who, text) => { const p = document.createElement('p'); p.className = cls; p.innerHTML = (who ? '<b>' + Z.esc(who) + ':</b> ' : '') + Z.esc(text); $('dlgLog').appendChild(p); $('dlgLog').scrollTop = $('dlgLog').scrollHeight; };
+  const addAiMark = (p) => { const mark = document.createElement('small'); mark.className = 'ai-mark'; mark.textContent = 'AI'; mark.title = 'AI-generated response'; p.appendChild(mark); };
+  const logLine = (cls, who, text, ai) => {
+    const p = document.createElement('p'); p.className = cls;
+    if (who) { const name = document.createElement('b'); name.textContent = who + ':'; p.appendChild(name); p.appendChild(document.createTextNode(' ')); }
+    p.appendChild(document.createTextNode(text)); if (ai) addAiMark(p);
+    $('dlgLog').appendChild(p); $('dlgLog').scrollTop = $('dlgLog').scrollHeight;
+  };
   U.dialog = function (npc) {
     const d = U.dlg = { npc, history: [], busy: false, lines: [] };
     $('dlgTitle').innerHTML = Z.esc(npc.name) + '<span class="role ' + npc.role + '">' + ({ employee: 'Zoo staff', fan: 'Dino fan', normie: 'Visitor' }[npc.role]) + '</span>';
@@ -69,12 +77,16 @@
     const d = U.dlg; if (!d || d.busy || !text.trim()) return; text = text.trim().slice(0, 200);
     logLine('me', Z.Game.name, text); d.lines.push([Z.Game.name, text]);
     if (d.group) { // group members answer in turn
-      Z.Game.group.members.slice(0, 2).forEach((m, i) => setTimeout(async () => { const r = await Z.Talk.reply(m, text, []); logLine('them', m.name, r); U.groupLog(Z.Game.name, text); U.groupLog(m.name, r); U.bubble(m, r.slice(0, 80), 3000); }, 500 + i * 900));
+      Z.Game.group.members.slice(0, 2).forEach((m, i) => setTimeout(async () => {
+        const reply = await Z.Talk.replyWithTier(m, text, []), ai = reply.tier === 'ollama' || reply.tier === 'cloud';
+        logLine('them', m.name, reply.text, ai); U.groupLog(Z.Game.name, text); U.groupLog(m.name, reply.text, ai); U.bubble(m, reply.text.slice(0, 80), 3000);
+      }, 500 + i * 900));
       return;
     }
     d.busy = true; d.history.push({ role: 'user', content: text });
-    const r = await Z.Talk.reply(d.npc, text, d.history); d.history.push({ role: 'assistant', content: r }); d.busy = false;
-    logLine('them', d.npc.name, r); d.lines.push([d.npc.name, r]); $('dlgTier').textContent = 'Reply engine: ' + ({ ollama: 'Local Ollama', cloud: 'Cloud LLM', fallback: 'Rule-based fallback' }[Z.Talk.lastTier] || Z.Talk.lastTier);
+    const reply = await Z.Talk.replyWithTier(d.npc, text, d.history), ai = reply.tier === 'ollama' || reply.tier === 'cloud';
+    d.history.push({ role: 'assistant', content: reply.text }); d.busy = false;
+    logLine('them', d.npc.name, reply.text, ai); d.lines.push([d.npc.name, reply.text]); $('dlgTier').textContent = 'Reply engine: ' + ({ ollama: 'Local Ollama', cloud: 'Cloud LLM', fallback: 'Rule-based fallback' }[reply.tier] || reply.tier);
   };
   U.printChat = function () {
     const d = U.dlg; if (!d) return; const w = window.open('', '_blank'); if (!w) { U.toast('Pop-up blocked: allow pop-ups to print.'); return; }

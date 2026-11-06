@@ -36,17 +36,18 @@
     return fill(Z.pick(T.data.fallback[npc.role]), T.vars());
   };
 
-  T.reply = async function (npc, text, history) {
+  T.replyWithTier = async function (npc, text, history) {
     if (Z.Net.php && Z.Net.aiTier !== 'fallback') {
       try {
         const r = await Z.Net.api('chat', { context: T.context(npc), message: text, history: history || [] });
-        if (r.ok && r.reply) { T.lastTier = r.tier; return r.reply; }
+        if (r.ok && r.reply) { T.lastTier = r.tier; return { text: r.reply, tier: r.tier }; }
       } catch (e) { /* use fallback */ }
     }
     T.lastTier = 'fallback';
     await new Promise((r) => setTimeout(r, 250 + Math.random() * 350));
-    return T.rule(npc, text);
+    return { text: T.rule(npc, text), tier: 'fallback' };
   };
+  T.reply = async function (npc, text, history) { return (await T.replyWithTier(npc, text, history)).text; };
 
   T.groupLine = function () { return fill(Z.pick(T.data.groupLines), T.vars()); };
   T.panic = () => Z.pick(T.data.panic);
