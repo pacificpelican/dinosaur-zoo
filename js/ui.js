@@ -169,7 +169,12 @@
         '<p>' + btn('svSave', 'Save now') + '</p><p class="row">' + btn('svExp', 'Export JSON', 'alt') + '<input type="file" id="svImp" accept="application/json"></p><p>' + btn('svNew', 'Start new game', 'ghost') + '</p><p class="note" id="svMsg"></p>';
     } else if (U.phoneTab === 'ctl') {
       h = '<h3>Controls</h3>' + kv([['Move', 'WASD / arrows / D-pad'], ['Run', 'Shift or hold . when not near an interaction'], ['Rotate camera', 'Q / E or drag'], ['Talk', '/ or the top button'], ['Interact / enter', 'Tap . or press X / Enter'], ['Eat / drink', ','], ['Select (join group, shutter)', "'"], ['Camera', 'C'], ['Pause', 'Esc']]) +
-        '<h3>Settings</h3><p class="row">Music <select id="ctCh"><option value="auto">Auto mix</option><option value="world">World music</option><option value="house">House (122 BPM)</option><option value="off">Off</option></select></p><p class="row">Volume <input type="range" id="ctVol" min="0" max="1" step="0.05" value="' + Z.Audio.volume + '"></p><p class="row"><label><input type="checkbox" id="ctPaint" ' + (G.painterly ? 'checked' : '') + '> Painterly filter</label> <label><input type="checkbox" id="ctPad" ' + (G.showPad ? 'checked' : '') + '> On-screen controller</label></p>';
+        '<h3>Settings</h3><fieldset class="setting-group"><legend>Game speed</legend>' +
+        '<label class="setting-option"><input type="radio" name="gameSpeed" value="default" required ' + (G.gameSpeed === 'default' ? 'checked' : '') + '> Default (current speed)</label>' +
+        '<label class="setting-option"><input type="radio" name="gameSpeed" value="relaxed" required ' + (G.gameSpeed === 'relaxed' ? 'checked' : '') + '> Relaxed (daytime passes at one-third speed)</label></fieldset>' +
+        '<label class="setting-option setting-check"><input type="checkbox" id="ctSimNight" ' + (G.simAwayNight ? 'checked' : '') + '> Sim away night time (skip from 10 pm to 9 am during gameplay)</label>' +
+        '<p class="note">Relaxed speed affects 9 am to 9 pm; the nighttime fast-forward rate stays the same.</p>' +
+        '<p class="row">Music <select id="ctCh"><option value="auto">Auto mix</option><option value="world">World music</option><option value="house">House (122 BPM)</option><option value="off">Off</option></select></p><p class="row">Volume <input type="range" id="ctVol" min="0" max="1" step="0.05" value="' + Z.Audio.volume + '"></p><p class="row"><label><input type="checkbox" id="ctPaint" ' + (G.painterly ? 'checked' : '') + '> Painterly filter</label> <label><input type="checkbox" id="ctPad" ' + (G.showPad ? 'checked' : '') + '> On-screen controller</label></p>';
     } else if (U.phoneTab === 'debug') {
       const n = Z.Net;
       h = '<h3>Debug</h3>' + kv([['PHP backend', n.php ? '<span class="pill ok">detected</span>' : '<span class="pill warn">not available</span>'], ['Save driver', Z.esc(n.storageLabel())], ['AI mode', Z.esc(n.aiLabel())], ['Dialogue tier', Z.esc(Z.Talk.lastTier)], ['Signed in', n.user ? 'yes' : 'no'], ['Last error', Z.esc(n.lastError || 'none')], ['FPS', G.engine ? Math.round(G.engine.getFps()) : '-'], ['Animals', Z.Ent.animals.length], ['Visitors', Z.Ent.npcs.length], ['Groups', Z.Ent.groups.length], ['Painterly', G.painterly ? 'on' : 'off']]) +
@@ -217,6 +222,13 @@
     on('svExp', () => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(G.snapshot())], { type: 'application/json' })); a.download = 'dfz-save.json'; a.click(); });
     if ($('svImp')) $('svImp').onchange = (e) => { const f = e.target.files[0]; if (!f) return; f.text().then((t) => { try { G.applyState(JSON.parse(t)); hide('mPhone'); U.toast('Save imported'); } catch (x) { $('svMsg').textContent = 'Invalid file.'; } }); };
     on('svNew', () => U.info('Start a new game?', 'Your current progress will be replaced.', [{ label: 'Cancel', alt: true }, { label: 'New game', fn: () => { hide('mPhone'); G.newGame(); } }]));
-    if ($('ctCh')) { $('ctCh').value = Z.Audio.channel; $('ctCh').onchange = (e) => Z.Audio.setChannel(e.target.value); $('ctVol').oninput = (e) => Z.Audio.setVolume(+e.target.value); $('ctPaint').onchange = (e) => G.setPainterly(e.target.checked); $('ctPad').onchange = (e) => G.setPad(e.target.checked); }
+    if ($('ctCh')) {
+      $('ctCh').value = Z.Audio.channel; $('ctCh').onchange = (e) => Z.Audio.setChannel(e.target.value);
+      $('ctVol').oninput = (e) => Z.Audio.setVolume(+e.target.value);
+      $('ctPaint').onchange = (e) => G.setPainterly(e.target.checked);
+      $('ctPad').onchange = (e) => G.setPad(e.target.checked);
+      Array.from(s.querySelectorAll('input[name="gameSpeed"]')).forEach((input) => { input.onchange = () => { if (input.checked) G.setGameSpeed(input.value); }; });
+      $('ctSimNight').onchange = (e) => G.setSimAwayNight(e.target.checked);
+    }
   };
 })(window.Z);

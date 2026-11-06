@@ -2,6 +2,14 @@
 (function (Z) {
   const B = BABYLON, U = Z.UI, E = Z.Ent, $ = (id) => document.getElementById(id);
   const G = Z.Game = { name: 'Player 1', player: { x: 0, z: -52, h: 0 }, group: null, painterly: true, showPad: true, t: 0, started: false, riding: null, win: null };
+  const PREFS_KEY = 'dfz.settings.v1';
+  let prefs = { gameSpeed: 'default', simAwayNight: false };
+  try {
+    const stored = JSON.parse(localStorage.getItem(PREFS_KEY) || '{}');
+    prefs = { gameSpeed: stored.gameSpeed === 'relaxed' ? 'relaxed' : 'default', simAwayNight: stored.simAwayNight === true };
+  } catch (e) { /* default preferences */ }
+  G.gameSpeed = prefs.gameSpeed;
+  G.simAwayNight = prefs.simAwayNight;
   let engine, scene, cam, winCam, W, avatar, data, post, painterlyOn = true;
   const keys = {}, pad = { x: 0, y: 0 };
   let knock = 0, nextEscape = 0, shotQueued = false, fastForward = false, lastOpen = null, lastSave = 0;
@@ -32,6 +40,18 @@
   };
   G.setPainterly = (v) => { G.painterly = v; if (post) post.setEnabled ? 0 : 0; painterlyOn = v; };
   G.setPad = (v) => { G.showPad = v; $('pads').style.display = v ? '' : 'none'; };
+  G.savePreferences = function () {
+    try { localStorage.setItem(PREFS_KEY, JSON.stringify({ gameSpeed: G.gameSpeed, simAwayNight: G.simAwayNight })); return true; }
+    catch (e) { U.toast('Could not save settings in this browser.'); return false; }
+  };
+  G.setGameSpeed = function (speed) {
+    G.gameSpeed = speed === 'relaxed' ? 'relaxed' : 'default';
+    G.savePreferences();
+  };
+  G.setSimAwayNight = function (enabled) {
+    G.simAwayNight = !!enabled;
+    G.savePreferences();
+  };
 
   function placePlayer(x, z, h) { G.player.x = x; G.player.z = z; G.player.h = h || 0; }
   function money(d, msg) { Z.state.money += d; if (msg) U.toast(msg); hud(); }
@@ -42,8 +62,9 @@
   }
 
   // ---------- clock ----------
-  function advance(dmin) {
+  function advance(dmin, allowNightSkip) {
     const s = Z.state, wasDay = s.day; s.minutes += dmin;
+    if (allowNightSkip !== false && G.simAwayNight && s.minutes >= 1320 && s.minutes < 1980) s.minutes = 1980;
     while (s.minutes >= 1440) { s.minutes -= 1440; s.day++; Z.Species.dayTick(); Z.Species.addResearch(20); Z.popularityBoost(Z.pick(W.exhibits).id, 2.5); G.save(); }
     if (s.day !== wasDay) U.toast('Day ' + s.day + ' begins.');
   }
@@ -63,7 +84,7 @@
   G.sleep = function () {
     const c = prices().hotel; if (Z.state.money < c) { U.toast('A room costs $' + c + '.'); return; }
     money(-c); Z.Audio.sfx('coin');
-    fade(() => { const s = Z.state; advance(s.minutes >= 540 ? 1440 - s.minutes + 540 : 540 - s.minutes); s.ticketDay = 0; W.setTime(s.minutes); closePark(); syncGate(); syncCrowd(); placePlayer(-50, -54, 0); U.toast('Good morning! Day ' + s.day + '. The park opens at 9 am.'); G.save(); hud(); }, 900);
+    fade(() => { const s = Z.state; advance(s.minutes >= 540 ? 1440 - s.minutes + 540 : 540 - s.minutes, false); s.ticketDay = 0; W.setTime(s.minutes); closePark(); syncGate(); syncCrowd(); placePlayer(-50, -54, 0); U.toast('Good morning! Day ' + s.day + '. The park opens at 9 am.'); G.save(); hud(); }, 900);
   };
 
   // ---------- interactables ----------
@@ -281,8 +302,10 @@
       G.t += dt; t = G.t;
       const s = Z.state, open = isOpen();
       if (G.started) {
-        const closedBefore = open; fastForward = !open;
-        advance(dt * (open ? 2.4 : 24)); if (!isOpen() && closedBefore) closePark();
+        const closedBefore = open;
+        advance(dt * (open ? (G.gameSpeed === 'relaxed' ? 0.8 : 2.4) : 24));
+        fastForward = !isOpen();
+        if (!isOpen() && closedBefore) closePark();
         if (isOpen() !== lastOpen) { syncGate(); syncCrowd(); }
         if (Math.floor(s.minutes) !== G.lastMin) { G.lastMin = Math.floor(s.minutes); W.setTime(s.minutes); hud(); }
         syncGate();
