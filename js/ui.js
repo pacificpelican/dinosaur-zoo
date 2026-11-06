@@ -72,6 +72,7 @@
 
   // ---- dialogue ----
   const addAiMark = (p) => { const mark = document.createElement('small'); mark.className = 'ai-mark'; mark.textContent = 'AI'; mark.title = 'AI-generated response'; p.appendChild(mark); };
+  const setChatBusy = (busy) => { $('dlgInput').disabled = busy; $('dlgForm').querySelector('button[type="submit"]').disabled = busy; };
   const logLine = (cls, who, text, tier) => {
     const p = document.createElement('p'); p.className = cls;
     if (who) { const name = document.createElement('b'); name.textContent = who + ':'; p.appendChild(name); p.appendChild(document.createTextNode(' ')); }
@@ -81,6 +82,7 @@
   };
   U.dialog = function (npc) {
     const d = U.dlg = { npc, history: [], busy: false, lines: [] };
+    setChatBusy(false);
     $('dlgTitle').innerHTML = Z.esc(npc.name) + '<span class="role ' + npc.role + '">' + ({ employee: 'Zoo staff', fan: 'Dino fan', normie: 'Visitor' }[npc.role]) + '</span>';
     $('dlgLog').innerHTML = '';
     const g = Z.Talk.greeting(npc); logLine('them', npc.name, g); d.lines.push([npc.name, g]);
@@ -99,23 +101,43 @@
       copy.querySelectorAll('b, .ai-mark').forEach((el) => el.remove());
       U.dlg.lines.push([name ? name.textContent.replace(/:$/, '') : '', copy.textContent.trim(), p.dataset.tier || '']);
     });
+    setChatBusy(!!g.chatBusy);
     $('dlgJoin').style.display = ''; $('dlgJoin').textContent = 'Leave group'; $('dlgTier').textContent = tierText(g.replyTiers || []); show('mDialog'); setTimeout(() => $('dlgInput').focus(), 50);
   };
   U.say = async function (text) {
-    const d = U.dlg; if (!d || d.busy || !text.trim()) return; text = text.trim().slice(0, 200);
+    const d = U.dlg; if (!d || d.busy || (d.group && d.group.chatBusy) || !text.trim()) return; text = text.trim().slice(0, 200);
     logLine('me', Z.Game.name, text); d.lines.push([Z.Game.name, text]);
-    if (d.group) { // group members answer in turn
-      Z.Game.group.members.slice(0, 2).forEach((m, i) => setTimeout(async () => {
-        const reply = await Z.Talk.replyWithTier(m, text, []);
-        d.lines.push([m.name, reply.text, reply.tier]);
-        logLine('them', m.name, reply.text, reply.tier); U.groupLog(Z.Game.name, text); U.groupLog(m.name, reply.text, reply.tier); U.bubble(m, reply.text.slice(0, 80), 3000);
-      }, 500 + i * 900));
+    if (d.group) {
+      const g = d.group, history = g.chatHistory || (g.chatHistory = []), replies = [];
+      g.chatBusy = true; setChatBusy(true); U.groupLog(Z.Game.name, text);
+      let failed = false;
+      try {
+        for (const m of g.members.slice(0, 2)) {
+          if (Z.Game.group !== g) break;
+          const turnHistory = replies.length ? history.concat([{ role: 'user', text }], replies) : history.slice();
+          const reply = await Z.Talk.replyWithTier(m, text, turnHistory);
+          if (Z.Game.group !== g) break;
+          if (reply.error && !failed) { U.toast('AI reply unavailable; using rule-based dialogue. See Debug for details.'); failed = true; }
+          U.groupLog(m.name, reply.text, reply.tier); U.bubble(m, reply.text.slice(0, 80), 3000);
+          const active = U.dlg;
+          if (active && active.group === g) { active.lines.push([m.name, reply.text, reply.tier]); logLine('them', m.name, reply.text, reply.tier); }
+          replies.push({ role: 'assistant', text: m.name + ': ' + reply.text });
+        }
+        if (replies.length) history.push({ role: 'user', text }, ...replies);
+      } finally {
+        g.chatBusy = false;
+        if (U.dlg && U.dlg.group === g) setChatBusy(false);
+      }
       return;
     }
-    d.busy = true; d.history.push({ role: 'user', content: text });
-    const reply = await Z.Talk.replyWithTier(d.npc, text, d.history);
-    d.history.push({ role: 'assistant', content: reply.text }); d.busy = false;
-    logLine('them', d.npc.name, reply.text, reply.tier); d.lines.push([d.npc.name, reply.text, reply.tier]); $('dlgTier').textContent = tierText([reply.tier]);
+    d.busy = true; setChatBusy(true);
+    try {
+      const reply = await Z.Talk.replyWithTier(d.npc, text, d.history);
+      d.history.push({ role: 'user', text }, { role: 'assistant', text: reply.text });
+      if (U.dlg !== d) return;
+      if (reply.error) U.toast('AI reply unavailable; using rule-based dialogue. See Debug for details.');
+      logLine('them', d.npc.name, reply.text, reply.tier); d.lines.push([d.npc.name, reply.text, reply.tier]); $('dlgTier').textContent = tierText([reply.tier]);
+    } finally { d.busy = false; if (U.dlg === d) setChatBusy(false); }
   };
   U.printChat = function () {
     const d = U.dlg; if (!d) return; const w = window.open('', '_blank'); if (!w) { U.toast('Pop-up blocked: allow pop-ups to print.'); return; }

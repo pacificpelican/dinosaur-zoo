@@ -202,7 +202,7 @@ switch ($action) {
     }
     case 'chat': {
         $tier = aiTier($CONFIG);
-        if ($tier === 'fallback') out(['ok' => false, 'tier' => 'fallback']);
+        if ($tier === 'fallback') out(['ok' => false, 'tier' => 'fallback', 'error' => 'No AI service is currently available.']);
         $ctx = substr((string)($in['context'] ?? ''), 0, 1500);
         $msgs = [['role' => 'system', 'content' => $ctx . ' Reply in character in 1-3 short sentences. Stay factual about dinosaurs; if unsure, say so.']];
         foreach (array_slice((array)($in['history'] ?? []), -8) as $h) {
@@ -210,7 +210,7 @@ switch ($action) {
         }
         $msgs[] = ['role' => 'user', 'content' => substr((string)($in['message'] ?? ''), 0, 400)];
         $r = aiComplete($CONFIG, $tier, $msgs);
-        if (!$r) out(['ok' => false, 'tier' => 'fallback']);
+        if (!$r) out(['ok' => false, 'tier' => 'fallback', 'error' => 'The AI service did not return a response.']);
         out(['ok' => true, 'tier' => $tier, 'reply' => trim($r)]);
     }
     case 'species': {

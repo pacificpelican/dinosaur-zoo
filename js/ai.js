@@ -37,15 +37,19 @@
   };
 
   T.replyWithTier = async function (npc, text, history) {
+    let error = '';
     if (Z.Net.php && Z.Net.aiTier !== 'fallback') {
       try {
         const r = await Z.Net.api('chat', { context: T.context(npc), message: text, history: history || [] });
         if (r.ok && r.reply) { T.lastTier = r.tier; return { text: r.reply, tier: r.tier }; }
-      } catch (e) { /* use fallback */ }
+        error = r.error || 'The AI service returned an invalid response.';
+      } catch (e) { error = 'Could not reach the AI service: ' + (e.message || e); }
+      Z.Net.lastError = error;
+      console.warn('AI chat unavailable; using rule-based reply:', error);
     }
     T.lastTier = 'fallback';
     await new Promise((r) => setTimeout(r, 250 + Math.random() * 350));
-    return { text: T.rule(npc, text), tier: 'fallback' };
+    return { text: T.rule(npc, text), tier: 'fallback', error };
   };
   T.reply = async function (npc, text, history) { return (await T.replyWithTier(npc, text, history)).text; };
 

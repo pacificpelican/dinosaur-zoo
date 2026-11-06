@@ -130,6 +130,7 @@ label.chk { display: flex; gap: 6px; align-items: center; margin: 4px 0; }
   .card { padding: 12px; }
   #prompt { bottom: 170px; font-size: 13px; }
   #groupPanel { top: 96px; }
+  #hudR { max-width: 42vw; flex-wrap: wrap; justify-content: flex-end; }
 }
 @media print {
   body * { visibility: hidden; }

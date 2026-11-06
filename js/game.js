@@ -161,7 +161,7 @@
     if (G.group) return;
     const g = npc.group || E.formGroup(npc, Z.pick([1, 2]));
     if (!g) { U.toast(npc.name + ' prefers to explore solo.'); return; }
-    g.player = true; g.until = Infinity; g.replyTiers = new Set(); G.group = g; $('groupLog').innerHTML = ''; $('groupTier').textContent = ''; $('groupPanel').classList.remove('hidden');
+    g.player = true; g.until = Infinity; g.replyTiers = new Set(); g.chatHistory = []; g.chatBusy = false; G.group = g; $('groupLog').innerHTML = ''; $('groupTier').textContent = ''; $('groupPanel').classList.remove('hidden');
     const m = g.members[0]; const l = Z.Talk.joinReply(); U.groupLog(m.name, l); U.bubble(m, l, 3000); U.toast('You joined a group of ' + (g.members.length) + '. Press / to chat.');
   };
   G.leaveGroup = function (quiet) {
@@ -179,12 +179,11 @@
     if (G.win) { if (k === 'x' || k === '.' || k === ',' || k === 'Enter') G.closeWindow(); else if (k === "'") shoot(); return; }
     if (k === '/') { if (G.group) U.groupDialog(); else { const n = E.nearestNpc(G.player.x, G.player.z, 4); if (n) { n.mode = n.mode === 'walk' ? 'idle' : n.mode; n.timer = Math.max(n.timer || 0, 8); U.dialog(n); } else U.toast('No one is close enough to talk to.'); } }
     else if (k === '.' || k === 'x' || k === 'Enter') {
-      if (!$('viewfinder').classList.contains('hidden')) return shoot();
       const a = nearestAct(); if (a) a.act(); else { const n = E.nearestNpc(G.player.x, G.player.z, 3.5); if (n) U.dialog(n); }
     } else if (k === ',') { const i = Z.state.inv; if (i.soda) { i.soda--; Z.Audio.sfx('click'); U.toast('Glug glug. Purple Pop is delicious!'); Z.state.ate++; } else if (i.funnel) { i.funnel--; Z.Audio.sfx('click'); U.toast('Funnel cake! Powdered sugar everywhere.'); Z.state.ate++; } else U.toast('Nothing to eat or drink yet.'); hud(); }
     else if (k === "'") {
       if (!$('viewfinder').classList.contains('hidden')) return shoot();
-      if (G.group) return G.leaveGroup(); const n = E.nearestNpc(G.player.x, G.player.z, 6); if (n && n.role !== 'employee') G.joinGroup(n); else $('viewfinder').classList.toggle('hidden');
+      if (G.group) return G.leaveGroup(); const n = E.nearestNpc(G.player.x, G.player.z, 6); if (n && n.role !== 'employee') G.joinGroup(n);
     } else if (k === 'c') $('viewfinder').classList.toggle('hidden');
   }
   function bindInput() {
@@ -211,6 +210,7 @@
     const end = () => { dpActive = false; pad.x = pad.y = 0; const nub = dp.querySelector('.nub'); if (nub) nub.style.transform = ''; };
     dp.addEventListener('pointerup', end); dp.addEventListener('pointercancel', end);
     $('btnCam').onclick = () => { if (G.started && !anyBlocking()) press('c'); };
+    $('btnPhone').onclick = () => { if (G.started && !anyBlocking() && !dialogOpen() && !G.win) U.openPhone(); };
     $('btnTV').onclick = () => { if (G.started && !anyBlocking()) U.openPhone('tv'); };
     $('btnPause').onclick = () => { if (G.started) U.show('mPause'); };
     $('btnMute').onclick = () => { Z.Audio.setMuted(!Z.Audio.muted); };
@@ -220,7 +220,7 @@
     $('pExit').onclick = () => { U.hide('mPause'); G.save(); G.started = false; $('hud').classList.add('hidden'); showTitle(); };
     $('phClose').onclick = () => U.hide('mPhone'); $('shotClose').onclick = () => U.hide('mShot');
     $('dlgClose').onclick = closeDialog;
-    $('dlgForm').onsubmit = (e) => { e.preventDefault(); const v = $('dlgInput').value; $('dlgInput').value = ''; U.say(v); };
+    $('dlgForm').onsubmit = (e) => { e.preventDefault(); if (U.dlg && (U.dlg.busy || (U.dlg.group && U.dlg.group.chatBusy))) return; const v = $('dlgInput').value; $('dlgInput').value = ''; U.say(v); };
     $('dlgJoin').onclick = () => { const d = U.dlg; if (G.group) { G.leaveGroup(); closeDialog(); } else if (d && d.npc) { closeDialog(); G.joinGroup(d.npc); } };
     $('dlgPrint').onclick = U.printChat;
     $('winClose').onclick = () => G.closeWindow(); $('winFact').onclick = U.nextFact; $('winShot').onclick = () => shoot();
@@ -293,7 +293,7 @@
     if (m > 0.05 && knock <= 0) {
       const fx = -Math.cos(cam.alpha), fz = -Math.sin(cam.alpha), rx = fz, rz = -fx;
       const dx = fx * iy + rx * ix, dz = fz * iy + rz * ix;
-      const dotRun = keys['.'] && !nearestAct() && $('viewfinder').classList.contains('hidden') && !dialogOpen() && !G.win;
+      const dotRun = keys['.'] && !nearestAct() && !dialogOpen() && !G.win;
       const run = keys.shift || dotRun || m > 0.95 && pad.x * pad.x + pad.y * pad.y > 0.9, spd = run ? 7 : 4.2 * Math.min(1, m + 0.3);
       p.h += Z.angleDiff(p.h, Math.atan2(dx, dz)) * Math.min(1, dt * 12);
       const c = W.collide(p.x + dx / Math.hypot(dx, dz) * spd * dt, p.z + dz / Math.hypot(dx, dz) * spd * dt, 0.5); p.x = Z.clamp(c[0], -170, 170); p.z = Z.clamp(c[1], -140, 170); walk = 1;

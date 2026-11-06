@@ -20,7 +20,8 @@ Optional backend settings (storage driver, Ollama / cloud LLM) live in `config.p
 - The hotel ATM lets you withdraw $100 at a time, up to $300 per in-game day, for extended visits.
 - Settings > Controls lets you slow daytime to one-third speed and skips gameplay nights from 10 pm to 9 am by default (you can turn this off); nighttime speed is otherwise unchanged. The night-skip setting and music choice are stored with the game save.
 - Walk up to the glass viewing windows and press `.` for a close-up. Buy Brazil nuts and feed the small dinosaurs in the petting pen. Ride the cable car. Fund research at the Genome Lab to rediscover or synthesize new species.
-- Talk to visitors, fans and tan-uniformed staff with `/`; join a group with `'`. Press `C` for the camera: shots are watermarked and downloadable.
+- Talk to visitors, fans and tan-uniformed staff with `/`; join a group with `'`. Open the camera with `C` or the camera button, then press `'` to take a watermarked, downloadable shot.
+- Open the Zoo Phone with `P` or the phone button in the upper-right HUD.
 - Open ZooTV with the TV button in the upper-right HUD or the ZooTV phone tab to watch a selected animal wander, forage, rest, or fly around its habitat.
 - In Settings > Account, a signed-in account shows its status and a log-out option instead of the login form. Settings > Save/Load lets you choose explicitly between a browser save and (when signed in) a server save.
 - Dinosaurs occasionally escape. Keep clear.
