@@ -160,7 +160,7 @@
     $('btnTitleSettings').onclick = () => U.openPhone('ctl');
     $('btnNew').onclick = () => startGame(true); $('btnContinue').onclick = () => startGame(false);
     $('badge').onclick = () => { if (G.started) U.openPhone('acct'); };
-    $('c').addEventListener('wheel', (e) => { if (G.win) return; cam.radius = Z.clamp(cam.radius + e.deltaY * 0.02, 8, 42); e.preventDefault(); }, { passive: false });
+    $('c').addEventListener('wheel', (e) => { if (!G.started || G.win) return; cam.radius = Z.clamp(cam.radius + e.deltaY * 0.02, 8, 42); e.preventDefault(); }, { passive: false });
     addEventListener('keydown', (e) => { if (e.key === 'p' || e.key === 'P') { if (!typing() && G.started && !anyBlocking() && !dialogOpen()) U.openPhone(); } });
   }
 
@@ -251,9 +251,8 @@
   function frame() {
     let dt = Math.min(0.1, engine.getDeltaTime() / 1000), t = G.t;
     const paused = anyBlocking() && !(G.started === false);
-    if (!G.started) { cam.alpha += dt * 0.08; cam.target.set(0, 4, 30); cam.radius = 70; cam.beta = 1.1; dt = Math.min(dt, 0.05); }
     const sim = G.started && !paused;
-    if (sim || !G.started) {
+    if (sim) {
       G.t += dt; t = G.t;
       const s = Z.state, open = isOpen();
       if (G.started) {
@@ -271,13 +270,17 @@
       E.update(dt, t, { night, announce: (m) => U.toast(m) });
       if (G.started) { const a = nearestAct(), n = !G.group && E.nearestNpc(G.player.x, G.player.z, 4), pr = $('prompt'); let h = ''; if (!G.riding && !G.win && !dialogOpen()) { if (a) h += '<b>[.]</b> ' + Z.esc(a.label()); if (G.group) h += (h ? '<br>' : '') + "<b>[/]</b> Group chat &nbsp; <b>[']</b> Leave group"; else if (n) h += (h ? '<br>' : '') + '<b>[/]</b> Talk to ' + Z.esc(n.name) + (n.role === 'employee' ? ' (staff)' : '') + (n.role !== 'employee' ? " &nbsp; <b>[']</b> Join group" : ''); } if (G.riding) h = 'Riding the cable car...'; pr.innerHTML = h; pr.classList.toggle('hidden', !h); }
     }
-    updateCamera(dt);
+    if (G.started) updateCamera(dt);
     U.updateBubbles(scene, engine, scene.activeCamera);
     scene.render();
   }
 
   // ---------- boot ----------
   function showTitle() {
+    G.started = false;
+    if (scene.activeCamera !== cam) scene.activeCamera = cam;
+    cam.detachControl();
+    cam.alpha = -Math.PI / 2; cam.beta = 1.1; cam.radius = 70; cam.target.set(0, 4, 30);
     const has = Z.Net.hasLocal() || Z.Net.user; $('btnContinue').style.display = has ? '' : 'none';
     $('titleNote').textContent = Z.Net.php ? 'Backend: ' + Z.Net.storageLabel() + ' \u00b7 AI: ' + Z.Net.aiLabel() : 'No PHP backend found: playing offline. Saves stay in this browser.';
     U.show('mTitle');
@@ -285,7 +288,7 @@
   async function startGame(isNew) {
     Z.Audio.init(); G.name = ($('tName').value || 'Player 1').slice(0, 18); $('badge').textContent = G.name;
     if (isNew) { G.applyState(freshState(G.name)); } else { const ok = await G.loadSaved(); if (!ok) G.applyState(freshState(G.name)); }
-    U.hide('mTitle'); $('hud').classList.remove('hidden'); G.started = true; cam.beta = 1.1; cam.radius = 20; cam.alpha = -Math.PI / 2; cam.target.set(G.player.x, 1.4, G.player.z); lastSave = G.t;
+    U.hide('mTitle'); $('hud').classList.remove('hidden'); G.started = true; cam.upperRadiusLimit = 42; cam.beta = 1.1; cam.radius = 20; cam.alpha = -Math.PI / 2; cam.target.set(G.player.x, 1.4, G.player.z); cam.attachControl($('c'), true); lastSave = G.t;
     U.toast('Welcome! Buy admission at the gate, then explore. Press P for your phone.');
   }
 
@@ -296,7 +299,7 @@
     const canvas = $('c'); engine = new B.Engine(canvas, true, { preserveDrawingBuffer: false, stencil: false }); G.engine = engine;
     scene = new B.Scene(engine); G.scene = scene; E.scene = scene; scene.skipPointerMovePicking = true;
     cam = new B.ArcRotateCamera('cam', -Math.PI / 2, 1.1, 20, new B.Vector3(0, 1.4, -52), scene);
-    cam.lowerRadiusLimit = 8; cam.upperRadiusLimit = 42; cam.lowerBetaLimit = 0.45; cam.upperBetaLimit = 1.45; cam.minZ = 0.3; cam.maxZ = 600; cam.panningSensibility = 0; cam.angularSensibilityX = 700; cam.angularSensibilityY = 900;
+    cam.lowerRadiusLimit = 8; cam.upperRadiusLimit = 80; cam.lowerBetaLimit = 0.45; cam.upperBetaLimit = 1.45; cam.minZ = 0.3; cam.maxZ = 600; cam.panningSensibility = 0; cam.angularSensibilityX = 700; cam.angularSensibilityY = 900;
     cam.inputs.removeByType('ArcRotateCameraKeyboardMoveInput'); cam.inputs.removeByType('ArcRotateCameraMouseWheelInput'); cam.attachControl(canvas, true);
     winCam = new B.FreeCamera('win', new B.Vector3(0, 2, 0), scene); winCam.minZ = 0.2; winCam.maxZ = 400; scene.activeCamera = cam;
     W = Z.world = Z.World; W.build(scene, wd);
