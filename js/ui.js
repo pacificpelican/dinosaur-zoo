@@ -93,7 +93,12 @@
     const g = Z.Game.group; if (!g) return;
     U.dlg = { npc: null, group: g, history: [], lines: [] };
     $('dlgTitle').textContent = 'Group chat (' + g.members.length + ' friends)'; $('dlgLog').innerHTML = ''; $('dlgChips').innerHTML = '';
-    Array.from($('groupLog').children).forEach((p) => { const q = document.createElement('p'); q.className = 'them'; q.innerHTML = p.innerHTML; $('dlgLog').appendChild(q); });
+    Array.from($('groupLog').children).forEach((p) => {
+      const q = document.createElement('p'); q.className = 'them'; q.innerHTML = p.innerHTML; $('dlgLog').appendChild(q);
+      const name = p.querySelector('b'), copy = p.cloneNode(true);
+      copy.querySelectorAll('b, .ai-mark').forEach((el) => el.remove());
+      U.dlg.lines.push([name ? name.textContent.replace(/:$/, '') : '', copy.textContent.trim(), p.dataset.tier || '']);
+    });
     $('dlgJoin').style.display = ''; $('dlgJoin').textContent = 'Leave group'; $('dlgTier').textContent = tierText(g.replyTiers || []); show('mDialog'); setTimeout(() => $('dlgInput').focus(), 50);
   };
   U.say = async function (text) {
@@ -102,6 +107,7 @@
     if (d.group) { // group members answer in turn
       Z.Game.group.members.slice(0, 2).forEach((m, i) => setTimeout(async () => {
         const reply = await Z.Talk.replyWithTier(m, text, []);
+        d.lines.push([m.name, reply.text, reply.tier]);
         logLine('them', m.name, reply.text, reply.tier); U.groupLog(Z.Game.name, text); U.groupLog(m.name, reply.text, reply.tier); U.bubble(m, reply.text.slice(0, 80), 3000);
       }, 500 + i * 900));
       return;
@@ -109,11 +115,14 @@
     d.busy = true; d.history.push({ role: 'user', content: text });
     const reply = await Z.Talk.replyWithTier(d.npc, text, d.history);
     d.history.push({ role: 'assistant', content: reply.text }); d.busy = false;
-    logLine('them', d.npc.name, reply.text, reply.tier); d.lines.push([d.npc.name, reply.text]); $('dlgTier').textContent = tierText([reply.tier]);
+    logLine('them', d.npc.name, reply.text, reply.tier); d.lines.push([d.npc.name, reply.text, reply.tier]); $('dlgTier').textContent = tierText([reply.tier]);
   };
   U.printChat = function () {
     const d = U.dlg; if (!d) return; const w = window.open('', '_blank'); if (!w) { U.toast('Pop-up blocked: allow pop-ups to print.'); return; }
-    w.document.write('<title>Chat</title><body style="font-family:Georgia,serif;max-width:640px;margin:30px auto"><h2>Dinosaurs &amp; Friends Zoo &mdash; conversation</h2>' + d.lines.map((l) => '<p><b>' + Z.esc(l[0]) + ':</b> ' + Z.esc(l[1]) + '</p>').join('') + '<hr><small>Created by Daniel McKeown <a href="https://altaredwood.work">https://altaredwood.work</a></small></body>');
+    const logo = Z.esc(new URL('assets/dinosaurs-friends-zoo-logo.svg', document.baseURI).href);
+    const printTitle = 'Dinosaurs_and_Friends_Zoo__conversation__' + new Date().toISOString().replace(/[:.]/g, '-');
+    const lines = d.lines.map((l) => '<p><b>' + Z.esc(l[0]) + ':</b> ' + Z.esc(l[1]) + (isAiTier(l[2]) ? ' <small class="ai-mark">AI</small>' : '') + '</p>').join('');
+    w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>' + printTitle + '</title><style>body{font-family:Georgia,serif;max-width:680px;margin:30px auto;padding:0 20px;color:#292333}.logo{display:block;width:min(100%,520px);height:auto;margin:0 auto 24px}h2{font-size:1.35rem}p{line-height:1.5;margin:12px 0}.ai-mark{display:inline-block;margin-left:5px;color:#777;font:600 9px Arial,sans-serif;letter-spacing:.06em;vertical-align:.12em}footer{margin-top:24px;padding-top:12px;border-top:1px solid #bbb;font-size:.8rem;color:#555}@media print{body{margin:0 auto}}</style></head><body><img class="logo" src="' + logo + '" alt="Dinosaurs &amp; Friends Zoo"><h2>Conversation</h2>' + lines + '<footer>Dinosaurs &amp; Friends Zoo · Created by Daniel McKeown · <a href="https://altaredwood.work">altaredwood.work</a></footer></body></html>');
     w.document.close(); w.focus(); setTimeout(() => w.print(), 300);
   };
 
