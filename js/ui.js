@@ -153,7 +153,7 @@
     entries.forEach((e) => e.sp.facts.forEach((f) => U.win.facts.push(e.sp.common + ': ' + f)));
     $('winInfo').innerHTML = '<b>' + Z.esc(ex.name) + '</b><br>' + (entries.map((e) => Z.esc(e.sp.name) + ' &times;' + e.n + ' <span class="pill">' + Z.esc(e.sp.era || '') + '</span>').join(' &middot; ') || 'Empty for now.') + '<br><span id="winFactText"></span>';
     U.nextFact();
-    $('winPhotos').innerHTML = ex.id === 'parakeets' ? PHOTOS.map((p) => '<img src="art/' + encodeURI(p) + '" alt="Parakeet photo from the McKeown flock" loading="lazy">').join('') : '';
+    $('winPhotos').innerHTML = ex.id === 'parakeets' ? PHOTOS.map((p) => '<img src="art/' + encodeURI(p) + '" alt="Parakeet photo from the McKeown flock">').join('') : '';
     $('winPhotos').onclick = (e) => { if (e.target.tagName === 'IMG') U.info('Photo from the flock', '<img src="' + e.target.src + '" style="width:100%;border-radius:8px">'); };
     show('winFrame'); show('winBar');
   };

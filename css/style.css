@@ -118,12 +118,14 @@ label.chk { display: flex; gap: 6px; align-items: center; margin: 4px 0; }
 
 /* Viewing window */
 #winFrame { position: fixed; inset: 0; pointer-events: none; z-index: 15; border: 22px solid transparent; border-image: linear-gradient(135deg, #ffc247, #8c4bd6, #ffc247) 1; box-shadow: inset 0 0 0 6px #2b1646, inset 0 0 70px #000b; }
-#winBar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 16; background: linear-gradient(180deg, #2b1646cc, #12081f); padding: 10px 14px 14px; display: flex; gap: 12px; align-items: flex-start; flex-wrap: wrap; border-top: 3px solid var(--gold); }
+#winBar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 16; background: linear-gradient(180deg, #2b1646cc, #12081f); padding: 10px 14px 14px; display: flex; gap: 10px 12px; align-items: flex-start; flex-wrap: wrap; border-top: 3px solid var(--gold); max-height: 65vh; overflow-y: auto; touch-action: pan-y; }
 #winInfo { flex: 1 1 260px; min-width: 220px; }
 #winInfo h3 { margin: 0 0 3px; }
 #winInfo p { margin: 3px 0; font-size: 13px; }
-#winPhotos { display: flex; gap: 6px; overflow-x: auto; max-width: 100%; }
-#winPhotos img { height: 78px; border: 2px solid var(--gold); border-radius: 6px; cursor: pointer; }
+#winActions { min-width: 150px; gap: 4px; }
+#winPhotos { display: flex; flex: 1 1 100%; min-width: 0; gap: 6px; overflow-x: auto; max-width: 100%; touch-action: pan-x; }
+#winPhotos:empty { display: none; }
+#winPhotos img { flex: 0 0 104px; width: 104px; height: 78px; object-fit: cover; border: 2px solid var(--gold); border-radius: 6px; cursor: pointer; }
 #shotImg { width: 100%; border: 3px solid var(--gold); border-radius: 8px; }
 
 @media (max-width: 640px) {
@@ -131,6 +133,8 @@ label.chk { display: flex; gap: 6px; align-items: center; margin: 4px 0; }
   #prompt { bottom: 170px; font-size: 13px; }
   #groupPanel { top: 96px; }
   #hudR { max-width: 42vw; flex-wrap: wrap; justify-content: flex-end; }
+  #winActions { flex: 1 1 100%; min-width: 0; flex-direction: row; flex-wrap: wrap; }
+  #winActions .btn { flex: 1 1 0; margin: 0; padding: 6px; font-size: 13px; white-space: nowrap; }
 }
 @media print {
   body * { visibility: hidden; }

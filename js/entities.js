@@ -41,6 +41,7 @@
 
   // ---------- exhibit animals ----------
   const BUDGIE_PERCH_SPACING = 0.45;
+  const BUDGIE_FOOT_OFFSET = 0.234;
   function chooseBudgiePerch(ex, current, rng, allowCrowded) {
     const occupied = [];
     E.animals.forEach((bird) => {
@@ -66,7 +67,7 @@
     if (act.kind === 'budgie') { act.perch = chooseBudgiePerch(ex, null, rng, true); const p = ex.perches[act.perch]; act.x = p[0]; act.y = p[1]; act.z = p[2]; act.h = rng() * 6.28; act.fly = null; }
     if (act.kind === 'ptero') { act.ang = rng() * 6.28; act.rad = 6 + rng() * 8; act.alt = 7 + rng() * 6; act.dir = rng() < 0.5 ? 1 : -1; }
     if (sp.id === 'bronto') { act.x = ex.cx + (rng() - 0.5) * 12; act.z = ex.cz; }
-    api.root.position.set(act.x, act.y || 0, act.z); return act;
+    api.root.position.set(act.x, act.kind === 'budgie' ? act.y - api.L * BUDGIE_FOOT_OFFSET : (act.y || 0), act.z); return act;
   }
 
   E.rebuildAnimals = function () {
@@ -138,7 +139,8 @@
         else act.timer = Z.rr(1.5, 6);
       }
     }
-    act.api.root.position.set(act.x, act.y - 0.2 * 0, act.z); act.api.root.rotation.y = act.h;
+    // Perch positions describe the branch surface; the model's feet sit above its root.
+    act.api.root.position.set(act.x, act.y - act.api.L * BUDGIE_FOOT_OFFSET, act.z); act.api.root.rotation.y = act.h;
     act.api.update(t, { fly: st.fly, chat: st.chat, look: st.look, preen: st.preen, perchY: 0 });
   }
 
