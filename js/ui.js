@@ -77,6 +77,12 @@
   // ---- dialogue ----
   const addAiMark = (p) => { const mark = document.createElement('small'); mark.className = 'ai-mark'; mark.textContent = 'AI'; mark.title = 'AI-generated response'; p.appendChild(mark); };
   const setChatBusy = (busy) => { $('dlgInput').disabled = busy; $('dlgForm').querySelector('button[type="submit"]').disabled = busy; };
+  const finishChatReply = () => {
+    setChatBusy(false);
+    if (!$('mDialog').classList.contains('hidden') &&
+        ['mInfo', 'mPhone', 'mPause', 'mShot'].every((id) => $(id).classList.contains('hidden')) &&
+        (document.activeElement === document.body || document.activeElement === $('dlgInput'))) $('dlgInput').focus();
+  };
   const logLine = (cls, who, text, tier) => {
     const p = document.createElement('p'); p.className = cls;
     if (who) { const name = document.createElement('b'); name.textContent = who + ':'; p.appendChild(name); p.appendChild(document.createTextNode(' ')); }
@@ -122,7 +128,7 @@
         if (replies.length) history.push({ role: 'user', text }, ...replies);
       } finally {
         g.chatBusy = false;
-        if (U.dlg && U.dlg.group === g) setChatBusy(false);
+        if (U.dlg && U.dlg.group === g) finishChatReply();
       }
       return;
     }
@@ -134,7 +140,7 @@
       if (U.dlg !== d) return;
       if (reply.error) U.toast('AI reply unavailable; using rule-based dialogue. See Debug for details.');
       logLine('them', d.npc.name, reply.text, reply.tier); d.lines.push([d.npc.name, reply.text, reply.tier]); $('dlgTier').textContent = tierText([reply.tier]);
-    } finally { d.busy = false; if (U.dlg === d) setChatBusy(false); }
+    } finally { d.busy = false; if (U.dlg === d) finishChatReply(); }
   };
   U.printChat = function () {
     const d = U.dlg; if (!d) return; const w = window.open('', '_blank'); if (!w) { U.toast('Pop-up blocked: allow pop-ups to print.'); return; }
