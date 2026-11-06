@@ -28,7 +28,8 @@ Optional backend settings (storage driver, Ollama / cloud LLM) live in `config.p
 | WASD / arrows, Shift | move, run |
 | Q / E or drag | rotate camera |
 | `/` | talk |
-| `.` / X / Enter | interact |
+| Tap `.` / X / Enter | interact |
+| Hold `.` away from interactions | run |
 | `,` | eat / drink |
 | `'` | select (join group, shutter) |
 | C, P, Esc | camera, phone (settings), pause |

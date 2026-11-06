@@ -144,6 +144,7 @@
     } else if (k === 'c') $('viewfinder').classList.toggle('hidden');
   }
   function bindInput() {
+    let dotPointer = null;
     addEventListener('keydown', (e) => {
       if (e.key === 'Escape') { if (!$('mDialog').classList.contains('hidden')) return closeDialog(); if (G.win) return G.closeWindow(); if (!$('mPhone').classList.contains('hidden')) return U.hide('mPhone'); if (!$('mShot').classList.contains('hidden')) return U.hide('mShot'); if (!$('mInfo').classList.contains('hidden')) return U.hide('mInfo'); if (G.started && $('mTitle').classList.contains('hidden')) return U.show($('mPause').classList.contains('hidden') ? 'mPause' : 'mPause'); return; }
       if (typing()) return;
@@ -152,7 +153,14 @@
       if (!e.repeat && ['/', '.', ',', "'", 'x', 'c', 'enter'].includes(k)) press(k);
     });
     addEventListener('keyup', (e) => { const k = e.key.toLowerCase(); keys[k] = false; if (e.key === 'Shift') keys.shift = false; });
-    $('abtns').addEventListener('pointerdown', (e) => { const b = e.target.closest('[data-k]'); if (b) { e.preventDefault(); press(b.dataset.k); } });
+    addEventListener('blur', () => { Object.keys(keys).forEach((k) => { keys[k] = false; }); dotPointer = null; });
+    $('abtns').addEventListener('pointerdown', (e) => {
+      const b = e.target.closest('[data-k]');
+      if (b) { e.preventDefault(); if (b.dataset.k === '.') { keys['.'] = true; dotPointer = e.pointerId; } press(b.dataset.k); }
+    });
+    const releaseButton = (e) => { if (dotPointer !== null && (!e || e.pointerId === dotPointer)) { keys['.'] = false; dotPointer = null; } };
+    addEventListener('pointerup', releaseButton);
+    addEventListener('pointercancel', releaseButton);
     const dp = $('dpad'), upd = (e) => { const r = dp.getBoundingClientRect(), dx = (e.clientX - r.left) / r.width * 2 - 1, dy = (e.clientY - r.top) / r.height * 2 - 1, m = Math.hypot(dx, dy); if (m < 0.22) { pad.x = pad.y = 0; } else { pad.x = dx / Math.max(1, m); pad.y = dy / Math.max(1, m); } const nub = dp.querySelector('.nub'); if (nub) nub.style.transform = 'translate(' + pad.x * 22 + 'px,' + pad.y * 22 + 'px)'; };
     let dpActive = false; dp.addEventListener('pointerdown', (e) => { dpActive = true; dp.setPointerCapture(e.pointerId); upd(e); e.preventDefault(); });
     dp.addEventListener('pointermove', (e) => { if (dpActive) upd(e); });
@@ -239,7 +247,9 @@
     else { avatar.root.rotation.z = 0; }
     if (m > 0.05 && knock <= 0) {
       const fx = -Math.cos(cam.alpha), fz = -Math.sin(cam.alpha), rx = fz, rz = -fx;
-      const dx = fx * iy + rx * ix, dz = fz * iy + rz * ix, run = keys.shift || m > 0.95 && pad.x * pad.x + pad.y * pad.y > 0.9, spd = run ? 7 : 4.2 * Math.min(1, m + 0.3);
+      const dx = fx * iy + rx * ix, dz = fz * iy + rz * ix;
+      const dotRun = keys['.'] && !nearestAct() && $('viewfinder').classList.contains('hidden') && !dialogOpen() && !G.win;
+      const run = keys.shift || dotRun || m > 0.95 && pad.x * pad.x + pad.y * pad.y > 0.9, spd = run ? 7 : 4.2 * Math.min(1, m + 0.3);
       p.h += Z.angleDiff(p.h, Math.atan2(dx, dz)) * Math.min(1, dt * 12);
       const c = W.collide(p.x + dx / Math.hypot(dx, dz) * spd * dt, p.z + dz / Math.hypot(dx, dz) * spd * dt, 0.5); p.x = Z.clamp(c[0], -170, 170); p.z = Z.clamp(c[1], -140, 170); walk = 1;
     }
