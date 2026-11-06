@@ -167,6 +167,7 @@ switch ($action) {
         $tier = aiTier($CONFIG);
         out(['ok' => true, 'php' => PHP_VERSION, 'storage' => $store->label(),
              'ai' => ['ollama' => 'Ollama (Local)', 'cloud' => 'Cloud Provider', 'fallback' => 'Fallback Mode'][$tier], 'aiTier' => $tier,
+             'ollamaModel' => $tier === 'ollama' ? (string)$CONFIG['ai']['ollama']['model'] : null,
              'loggedIn' => $uid > 0, 'user' => $uname]);
     }
     case 'register': {

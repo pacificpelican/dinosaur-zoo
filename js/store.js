@@ -1,7 +1,7 @@
 /* Persistence + backend detection. Without PHP everything still works: saves go to localStorage and dialogue uses the rule-based engine. */
 (function (Z) {
   const KEY = 'dfz.save.v1';
-  const N = Z.Net = { php: false, info: null, user: null, aiTier: 'fallback', lastError: '' };
+  const N = Z.Net = { php: false, info: null, user: null, aiTier: 'fallback', ollamaModel: null, lastError: '' };
 
   N.api = async function (action, body) {
     const opt = body === undefined ? {} : { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) };
@@ -15,7 +15,8 @@
       const s = await N.api('status');
       if (!s || s.ok !== true) throw new Error('bad status');
       N.php = true; N.info = s; N.user = s.loggedIn ? s.user : null; N.aiTier = s.aiTier;
-    } catch (e) { N.php = false; N.info = null; N.user = null; N.aiTier = 'fallback'; }
+      N.ollamaModel = s.aiTier === 'ollama' && typeof s.ollamaModel === 'string' ? s.ollamaModel : null;
+    } catch (e) { N.php = false; N.info = null; N.user = null; N.aiTier = 'fallback'; N.ollamaModel = null; }
     return N.php;
   };
 
