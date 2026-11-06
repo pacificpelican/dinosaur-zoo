@@ -19,6 +19,7 @@ Optional backend settings (storage driver, Ollama / cloud LLM) live in `config.p
 - Walk up to the glass viewing windows and press `.` for a close-up. Buy Brazil nuts and feed the small dinosaurs in the petting pen. Ride the cable car. Fund research at the Genome Lab to rediscover or synthesize new species.
 - Talk to visitors, fans and tan-uniformed staff with `/`; join a group with `'`. Press `C` for the camera: shots are watermarked and downloadable.
 - Dinosaurs occasionally escape. Keep clear.
+- Settings includes Terms and Privacy tabs covering local play, hosted deployments, optional accounts, and possible host or AI-service data handling.
 
 | Key | Action |
 | --- | --- |
