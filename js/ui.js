@@ -177,7 +177,39 @@
   U.nextFact = function () { const w = U.win; if (!w || !w.facts.length) return; w.fi = (w.fi + 1) % w.facts.length; $('winFactText').textContent = w.facts[w.fi]; };
   U.closeWindow = function () { U.win = null; hide('winFrame'); hide('winBar'); };
 
-  U.shotPreview = function (url) { $('shotImg').src = url; $('shotDl').href = url; $('shotDl').download = 'Dinosaurs_and_Friends_Zoo-' + Z.stamp().replace(/[^0-9a-z]+/gi, '-') + '.png'; show('mShot'); };
+  U.shotPreview = function (url) {
+    const link = $('shotDl'), message = $('shotMsg');
+    $('shotImg').src = url; link.href = url;
+    link.download = 'Dinosaurs_and_Friends_Zoo-' + Z.stamp().replace(/[^0-9a-z]+/gi, '-') + '.png';
+    link.textContent = 'Download / Save'; link.onclick = null; message.textContent = '';
+    const mobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    if (mobile && typeof navigator.share === 'function' && typeof navigator.canShare === 'function' && typeof File === 'function') {
+      try {
+        const encoded = url.split(',')[1], bytes = atob(encoded), data = new Uint8Array(bytes.length);
+        for (let i = 0; i < bytes.length; i++) data[i] = bytes.charCodeAt(i);
+        const file = new File([data], link.download, { type: 'image/png' });
+        if (navigator.canShare({ files: [file] })) {
+          link.textContent = 'Share / Save';
+          const shareImage = (event) => {
+            event.preventDefault();
+            navigator.share({ files: [file] }).catch((error) => {
+              if (error.name === 'AbortError') return;
+              console.error('Screenshot sharing failed:', error);
+              if (link.onclick !== shareImage) return;
+              link.onclick = null; link.textContent = 'Download / Save';
+              message.textContent = 'Could not share the image. Use Download / Save to save it instead.';
+            });
+          };
+          link.onclick = shareImage;
+        }
+      } catch (error) {
+        console.error('Screenshot sharing unavailable:', error);
+        message.textContent = 'Sharing is unavailable. Use Download / Save instead.';
+      }
+    }
+    show('mShot');
+  };
 
   // ---- Zoo Phone ----
   const TABS = [['acct', 'Account'], ['tv', 'ZooTV'], ['chase', 'Dino Dash'], ['stats', 'Stats & Bank'], ['save', 'Save/Load'], ['ctl', 'Controls'], ['debug', 'Debug'], ['credits', 'Credits'], ['terms', 'Terms'], ['privacy', 'Privacy']];
