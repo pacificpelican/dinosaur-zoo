@@ -152,15 +152,24 @@
   };
 
   // ---- viewing window ----
-  const PHOTOS = ['Ava-3293561590_3cbda89e76.1e41789a.jpg', 'Bogeys_11th_Gotcha_Day__artwork_2025.jpg', 'Dodger-4887734382_6a6efc744a_z.053d0110.jpg', 'Striker--close-up-2010-by-DanielJMcKeown.jpg', 'Sparty-by-Jessica--April2010-byDanielJMcKeown.jpg', 'Belle-the-parakeet-by-JessicaMcKeown-9-10-2010.jpg'];
+  const PHOTOS = [
+    { name: 'Ava', file: 'Ava-3293561590_3cbda89e76.1e41789a.jpg' },
+    { name: 'Bogey', file: 'Bogeys_11th_Gotcha_Day__artwork_2025.jpg' },
+    { name: 'Dodger', file: 'Dodger-4887734382_6a6efc744a_z.053d0110.jpg' },
+    { name: 'Striker', file: 'Striker--close-up-2010-by-DanielJMcKeown.jpg' },
+    { name: 'Sparty', file: 'Sparty-by-Jessica--April2010-byDanielJMcKeown.jpg' },
+    { name: 'Belle', file: 'Belle-the-parakeet-by-JessicaMcKeown-9-10-2010.jpg' }
+  ];
   U.openWindow = function (ex) {
     const list = Z.Species.animalsIn(ex.id), names = {}; list.forEach((a) => { const sp = Z.Species.byId(a.sp); (names[sp.id] = names[sp.id] || { sp, n: 0 }).n++; });
     const entries = Object.values(names); U.win = { ex, entries, fi: 0, facts: [] };
     entries.forEach((e) => e.sp.facts.forEach((f) => U.win.facts.push(e.sp.common + ': ' + f)));
     $('winInfo').innerHTML = '<b>' + Z.esc(ex.name) + '</b><br>' + (entries.map((e) => Z.esc(e.sp.name) + ' &times;' + e.n + ' <span class="pill">' + Z.esc(e.sp.era || '') + '</span>').join(' &middot; ') || 'Empty for now.') + '<br><span id="winFactText"></span>';
     U.nextFact();
-    $('winPhotos').innerHTML = ex.id === 'parakeets' ? PHOTOS.map((p) => '<img src="art/' + encodeURI(p) + '" alt="Parakeet photo from the McKeown flock">').join('') : '';
-    $('winPhotos').onclick = (e) => { if (e.target.tagName === 'IMG') U.info('Photo from the flock', '<img src="' + e.target.src + '" style="width:100%;border-radius:8px">'); };
+    $('winPhotos').innerHTML = ex.id === 'parakeets' ? PHOTOS.map((p) => '<figure><img src="art/' + encodeURI(p.file) + '" alt="' + Z.esc(p.name) + ', member of the McKeown flock"><figcaption>' + Z.esc(p.name) + ' &middot; member of the McKeown flock</figcaption></figure>').join('') : '';
+    $('winPhotos').onclick = (e) => {
+      if (e.target.tagName === 'IMG') U.info(e.target.alt, '<img src="' + Z.esc(e.target.src) + '" alt="' + Z.esc(e.target.alt) + '" style="width:100%;border-radius:8px">');
+    };
     show('winFrame'); show('winBar');
   };
   U.nextFact = function () { const w = U.win; if (!w || !w.facts.length) return; w.fi = (w.fi + 1) % w.facts.length; $('winFactText').textContent = w.facts[w.fi]; };
