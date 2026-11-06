@@ -281,8 +281,8 @@
     engine.onEndFrameObservable.addOnce(() => {
       const src = engine.getRenderingCanvas(), c = document.createElement('canvas'); c.width = src.width; c.height = src.height; const x = c.getContext('2d');
       x.drawImage(src, 0, 0); const fs = Math.max(12, Math.round(c.width / 70)); x.font = 'bold ' + fs + 'px sans-serif';
-      const txt = 'Dinosaurs & Friends Zoo by Daniel McKeown https://altaredwood.work -- ' + Z.stamp();
-      x.fillStyle = 'rgba(20,8,36,.65)'; x.fillRect(0, c.height - fs * 2, c.width, fs * 2); x.fillStyle = '#ffc247'; x.fillText(txt, fs * 0.7, c.height - fs * 0.7);
+      const txt = 'Dinosaurs & Friends Zoo https://altaredwood.work -- ' + Z.stamp();
+      x.fillStyle = 'rgba(20,8,36,.65)'; x.fillRect(0, c.height - fs * 2, c.width, fs * 2); x.fillStyle = '#ffc247'; x.fillText(txt, fs * 0.7, c.height - fs * 0.7, c.width - fs * 1.4);
       const url = c.toDataURL('image/png'); U.photos.unshift(url); if (U.photos.length > 12) U.photos.pop(); Z.state.photos++;
       $('flash').classList.add('on'); setTimeout(() => $('flash').classList.remove('on'), 90);
       if (!was) vf.classList.remove('hidden'); shotQueued = false; setTimeout(() => U.shotPreview(url), 120);
