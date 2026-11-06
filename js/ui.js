@@ -8,6 +8,7 @@
       const frame = $('tvFrame');
       if (frame && frame.contentWindow) frame.contentWindow.postMessage('zootv-pause', '*');
     }
+    if (id === 'mDialog' && Z.Game) Z.Game.clearChatMovement();
     $(id).classList.add('hidden');
   };
   U.show = show; U.hide = hide;
@@ -180,7 +181,13 @@
 
   // ---- Zoo Phone ----
   const TABS = [['acct', 'Account'], ['tv', 'ZooTV'], ['chase', 'Dino Dash'], ['stats', 'Stats & Bank'], ['save', 'Save/Load'], ['ctl', 'Controls'], ['debug', 'Debug'], ['credits', 'Credits'], ['terms', 'Terms'], ['privacy', 'Privacy']];
-  U.openPhone = function (tab) { U.phoneTab = tab || U.phoneTab; U.renderPhone(); show('mPhone'); };
+  U.openPhone = function (tab) {
+    const toggle = $('phWorldPause'), game = Z.Game;
+    toggle.disabled = !game.started;
+    toggle.setAttribute('aria-pressed', String(game.phonePaused));
+    toggle.textContent = game.started ? (game.phonePaused ? 'Zoo paused' : 'Zoo running') : 'Zoo not started';
+    U.phoneTab = tab || U.phoneTab; U.renderPhone(); show('mPhone');
+  };
   U.renderPhone = function () {
     Z.PhoneChase.dispose();
     const G = Z.Game, st = Z.state; $('phTime').textContent = 'Day ' + st.day + ' ' + Z.fmtClock(st.minutes);

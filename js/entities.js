@@ -243,7 +243,8 @@
     const near = E.npcs.filter((o) => o !== seedNpc && !o.group && o.role !== 'employee' && o.api.root.isEnabled() && o.mode !== 'post' && Z.dist(o.x, o.z, seedNpc.x, seedNpc.z) < 14).sort((a, b) => Z.dist(a.x, a.z, seedNpc.x, seedNpc.z) - Z.dist(b.x, b.z, seedNpc.x, seedNpc.z));
     const members = [seedNpc].concat(near.slice(0, extra === undefined ? Z.pick([1, 1, 2, 3]) : extra));
     if (members.length < 2 && extra === undefined) return null;
-    const g = { id: Math.random(), members, until: performance.now() + Z.rr(50, 100) * 1000, nextLine: performance.now() + 4000, player: false };
+    const now = Z.Game.t * 1000;
+    const g = { id: Math.random(), members, until: now + Z.rr(50, 100) * 1000, nextLine: now + 4000, player: false };
     members.forEach((m) => { m.group = g; }); E.groups.push(g); if (members[0].mode === 'idle' || members[0].mode === 'walk') members[0].timer = Math.min(members[0].timer, 1);
     return g;
   };
@@ -257,7 +258,8 @@
     const act = Z.pick(cand), W = Z.world;
     // pop out through the fence on the side nearest the main path
     const side = act.ex.cx < 0 ? act.ex.rect[2] + 2 : act.ex.rect[0] - 2; act.x = side; act.h = act.ex.cx < 0 ? 1.57 : -1.57;
-    const info = { act, started: performance.now(), until: performance.now() + 32000, hit: 0, tcur: null };
+    const now = Z.Game.t * 1000;
+    const info = { act, started: now, until: now + 32000, hit: 0, tcur: null };
     act.escape = { target: () => { const p = target(); info.tcur = p; return p; } };
     E.escape = info; return info;
   };
@@ -280,7 +282,7 @@
     ctx.chaser = chaser && { x: chaser.x, z: chaser.z };
     if (chaser) E.npcs.forEach((n) => { if (n.api.root.isEnabled() && Z.dist(n.x, n.z, chaser.x, chaser.z) < 26 && !n.panic && n.mode !== 'post') { n.panic = 8; if (n.group) E.dissolve(n.group); } });
     E.npcs.forEach((n) => updateNpc(n, dt, t, ctx));
-    const now = performance.now();
+    const now = t * 1000;
     // groups: form, chatter, expire
     if (!E.nextGroup || now > E.nextGroup) { E.nextGroup = now + Z.rr(5, 11) * 1000; if (E.groups.length < 5) { const s = Z.pick(E.npcs.filter((n) => !n.group && n.role !== 'employee' && n.mode !== 'post')); if (s) E.formGroup(s); } }
     E.groups.slice().forEach((g) => {

@@ -117,7 +117,7 @@
 <!-- Settings phone -->
 <div class="modal hidden" id="mPhone">
   <div class="card phone">
-    <div class="status"><span id="phTime"></span><span>Zoo Phone &#9679;&#9679;&#9679;</span></div>
+    <div class="status"><span id="phTime"></span><button type="button" id="phWorldPause" aria-pressed="true" title="Pause or resume the zoo while the phone is open">Zoo paused</button><span>Zoo Phone &#9679;&#9679;&#9679;</span></div>
     <div class="tabs" id="phTabs"></div>
     <div class="screen" id="phScreen"></div>
     <div class="row" style="padding:6px;background:#1b0f2e;justify-content:center"><button class="btn" id="phClose">Close</button></div>
@@ -131,6 +131,15 @@
     <div id="dlgLog" aria-live="polite"></div>
     <div class="chips" id="dlgChips"></div>
     <form class="row" id="dlgForm" autocomplete="off"><input type="text" id="dlgInput" style="flex:1;min-width:140px" maxlength="200" placeholder="Say something..."><button class="btn" type="submit">Send</button></form>
+    <div class="chat-movement" aria-label="Chat movement controls">
+      <span>Move with arrows or hold a direction. Modified arrows still edit text.</span>
+      <div class="chat-directions" role="group" aria-label="Hold to walk">
+        <button type="button" data-move="left" aria-label="Walk left">&#9664;</button>
+        <button type="button" data-move="up" aria-label="Walk forward">&#9650;</button>
+        <button type="button" data-move="down" aria-label="Walk backward">&#9660;</button>
+        <button type="button" data-move="right" aria-label="Walk right">&#9654;</button>
+      </div>
+    </div>
     <div class="row" style="justify-content:space-between">
       <span class="chat-tier" id="dlgTier"></span>
       <span><button class="btn alt" id="dlgJoin">Join group</button><button class="btn ghost" id="dlgPrint">Print / PDF</button><button class="btn" id="dlgClose">Close</button></span>

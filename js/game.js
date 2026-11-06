@@ -1,7 +1,7 @@
 /* Boot, main loop, clock, economy, input, interactions, cable ride, escapes, saves, screenshots. */
 (function (Z) {
   const B = BABYLON, U = Z.UI, E = Z.Ent, $ = (id) => document.getElementById(id);
-  const G = Z.Game = { name: 'Player 1', player: { x: 0, z: -52, h: 0 }, group: null, painterly: true, showPad: true, t: 0, started: false, riding: null, win: null };
+  const G = Z.Game = { name: 'Player 1', player: { x: 0, z: -52, h: 0 }, group: null, painterly: true, showPad: true, phonePaused: true, t: 0, started: false, riding: null, win: null };
   const PREFS_KEY = 'dfz.settings.v2';
   const LEGACY_PREFS_KEY = 'dfz.settings.v1';
   const musicChannels = ['auto', 'world', 'house', 'off'];
@@ -17,7 +17,8 @@
   G.gameSpeed = prefs.gameSpeed;
   G.simAwayNight = prefs.simAwayNight;
   let engine, scene, cam, winCam, W, avatar, data, post, painterlyOn = true;
-  const keys = {}, pad = { x: 0, y: 0 };
+  const keys = {}, pad = { x: 0, y: 0 }, chatMove = { left: false, right: false, up: false, down: false };
+  G.clearChatMovement = () => { Object.keys(chatMove).forEach((k) => { chatMove[k] = false; }); ['arrowleft', 'arrowright', 'arrowup', 'arrowdown'].forEach((k) => { keys[k] = false; }); };
   let knock = 0, nextEscape = 0, shotQueued = false, fastForward = false, lastOpen = null, lastSave = 0;
   const prices = () => W.data.prices;
 
@@ -96,6 +97,7 @@
     const s = Z.state, open = isOpen();
     $('clock').textContent = 'Day ' + s.day + ' \u00b7 ' + Z.fmtClock(s.minutes) + ' \u00b7 ' + (open ? 'OPEN' : 'CLOSED') + (fastForward ? ' \u00bb\u00bb' : '');
     $('money').textContent = '$' + s.money + (s.inv.nuts ? ' \u00b7 nuts ' + s.inv.nuts : '') + (s.inv.soda ? ' \u00b7 soda ' + s.inv.soda : '') + (s.inv.funnel ? ' \u00b7 cake ' + s.inv.funnel : '');
+    if (!$('mPhone').classList.contains('hidden')) $('phTime').textContent = 'Day ' + s.day + ' ' + Z.fmtClock(s.minutes);
   }
 
   // ---------- clock ----------
@@ -179,7 +181,8 @@
     const m = g.members[0]; const l = Z.Talk.joinReply(); U.groupLog(m.name, l); U.bubble(m, l, 3000); U.toast('You joined a group of ' + (g.members.length) + '. Press / to chat.');
   };
   G.leaveGroup = function (quiet) {
-    const g = G.group; if (!g) return; g.player = false; g.until = performance.now() + 5000; G.group = null; $('groupPanel').classList.add('hidden');
+    const g = G.group; if (!g) return; g.player = false; g.until = G.t * 1000 + 5000; G.group = null; $('groupPanel').classList.add('hidden');
+    if (U.dlg && U.dlg.group === g) closeDialog();
     if (!quiet) { U.bubble(g.members[0], Z.Talk.leaveReply(), 2500); U.toast('You left the group.'); }
   };
 
@@ -204,13 +207,25 @@
     let dotPointer = null;
     addEventListener('keydown', (e) => {
       if (e.key === 'Escape') { if (!$('mDialog').classList.contains('hidden')) return closeDialog(); if (G.win) return G.closeWindow(); if (!$('mPhone').classList.contains('hidden')) return U.hide('mPhone'); if (!$('mShot').classList.contains('hidden')) return U.hide('mShot'); if (!$('mInfo').classList.contains('hidden')) return U.hide('mInfo'); if (G.started && $('mTitle').classList.contains('hidden')) return U.show($('mPause').classList.contains('hidden') ? 'mPause' : 'mPause'); return; }
-      if (typing()) return;
+      if (anyBlocking()) return;
+      const arrowInChat = dialogOpen() && document.activeElement === $('dlgInput') && e.key.startsWith('Arrow') && !e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey;
+      if (typing() && !arrowInChat) return;
       const k = e.key.toLowerCase(); keys[k] = true; if (e.key === 'Shift') keys.shift = true;
       if (['/', "'", 'enter', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(k)) e.preventDefault();
       if (!e.repeat && ['/', '.', ',', "'", 'x', 'c', 'enter'].includes(k)) press(k);
     });
     addEventListener('keyup', (e) => { const k = e.key.toLowerCase(); keys[k] = false; if (e.key === 'Shift') keys.shift = false; });
-    addEventListener('blur', () => { Object.keys(keys).forEach((k) => { keys[k] = false; }); dotPointer = null; });
+    addEventListener('blur', () => { Object.keys(keys).forEach((k) => { keys[k] = false; }); G.clearChatMovement(); dotPointer = null; });
+    $('dlgInput').addEventListener('focus', () => { ['w', 'a', 's', 'd', 'q', 'e', 'shift'].forEach((k) => { keys[k] = false; }); });
+    document.querySelectorAll('[data-move]').forEach((button) => {
+      const direction = button.dataset.move;
+      button.addEventListener('pointerdown', (e) => {
+        if (e.button !== 0) return;
+        e.preventDefault(); button.setPointerCapture(e.pointerId); chatMove[direction] = true;
+      });
+      const release = () => { chatMove[direction] = false; };
+      button.addEventListener('pointerup', release); button.addEventListener('pointercancel', release); button.addEventListener('lostpointercapture', release);
+    });
     $('abtns').addEventListener('pointerdown', (e) => {
       const b = e.target.closest('[data-k]');
       if (b) { e.preventDefault(); if (b.dataset.k === '.') { keys['.'] = true; dotPointer = e.pointerId; } press(b.dataset.k); }
@@ -233,6 +248,11 @@
     $('pSettings').onclick = () => { U.hide('mPause'); U.openPhone('ctl'); };
     $('pExit').onclick = () => { U.hide('mPause'); G.save(); G.started = false; $('hud').classList.add('hidden'); showTitle(); };
     $('phClose').onclick = () => U.hide('mPhone'); $('shotClose').onclick = () => U.hide('mShot');
+    $('phWorldPause').onclick = () => {
+      G.phonePaused = !G.phonePaused;
+      $('phWorldPause').setAttribute('aria-pressed', String(G.phonePaused));
+      $('phWorldPause').textContent = G.phonePaused ? 'Zoo paused' : 'Zoo running';
+    };
     $('dlgClose').onclick = closeDialog;
     $('dlgForm').onsubmit = (e) => { e.preventDefault(); if (U.dlg && (U.dlg.busy || (U.dlg.group && U.dlg.group.chatBusy))) return; const v = $('dlgInput').value; $('dlgInput').value = ''; U.say(v); };
     $('dlgJoin').onclick = () => { const d = U.dlg; if (G.group) { G.leaveGroup(); closeDialog(); } else if (d && d.npc) { closeDialog(); G.joinGroup(d.npc); } };
@@ -275,7 +295,7 @@
 
   // ---------- escapes ----------
   function updateEscape() {
-    const e = E.escape, now = performance.now();
+    const e = E.escape, now = G.t * 1000;
     if (e) {
       const a = e.act, d = Z.dist(a.x, a.z, G.player.x, G.player.z);
       if (d < 2.6 && knock <= 0 && !G.riding && !G.win && G.t > (e.cool || 0)) { knock = 2.2; e.cool = G.t + 9; const lost = Math.min(15, Z.state.money); money(-lost, 'The ' + a.sp.common + ' knocked you over! You dropped $' + lost + '.'); Z.Audio.sfx('roar'); }
@@ -298,7 +318,7 @@
     }
     if (!G.win) avatar.root.setEnabled(true);
     let ix = 0, iy = 0;
-    if (ctrl) { ix = (keys.d || keys.arrowright ? 1 : 0) - (keys.a || keys.arrowleft ? 1 : 0) + pad.x; iy = (keys.w || keys.arrowup ? 1 : 0) - (keys.s || keys.arrowdown ? 1 : 0) - pad.y; }
+    if (ctrl) { ix = (keys.d || keys.arrowright || chatMove.right ? 1 : 0) - (keys.a || keys.arrowleft || chatMove.left ? 1 : 0) + pad.x; iy = (keys.w || keys.arrowup || chatMove.up ? 1 : 0) - (keys.s || keys.arrowdown || chatMove.down ? 1 : 0) - pad.y; }
     const m = Math.hypot(ix, iy); if (m > 1) { ix /= m; iy /= m; }
     if (keys.q && ctrl) cam.alpha -= dt * 1.8; if (keys.e && ctrl) cam.alpha += dt * 1.8;
     let walk = 0;
@@ -333,7 +353,8 @@
   // ---------- main loop ----------
   function frame() {
     let dt = Math.min(0.1, engine.getDeltaTime() / 1000), t = G.t;
-    const paused = anyBlocking() && !(G.started === false);
+    const paused = ['mTitle', 'mPause', 'mInfo', 'mShot'].some((id) => !$(id).classList.contains('hidden')) ||
+      (!$('mPhone').classList.contains('hidden') && G.phonePaused);
     const sim = G.started && !paused;
     if (sim) {
       G.t += dt; t = G.t;
@@ -348,7 +369,7 @@
         syncGate();
         if (G.t - lastSave > 60) { lastSave = G.t; G.save(); }
         updateEscape();
-        updatePlayer(dt, !dialogOpen() && !G.win);
+        updatePlayer(dt, !anyBlocking() && !G.win);
       }
       const cs = W.update(dt, true);
       const night = W.daylight(Z.state.minutes) < 0.25;
