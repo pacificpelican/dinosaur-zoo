@@ -37,7 +37,7 @@ An optional `.sessions` directory in the project can be tried before the system 
 - In Settings > Account, a signed-in account shows its status and a log-out option instead of the login form. Settings > Save/Load lets you choose explicitly between a browser save and (when signed in) a server save.
 - Continue loads the server save first when signed in, falling back to the browser save with a notice if the server save is unavailable. Sign in through Settings on the title screen to access a server save. A server-save failure is reported even if the browser backup succeeds.
 - Saves include your approximate location and facing direction. The game autosaves about once a minute while playing and when you exit to the title; manual saves are available in Settings > Save/Load. A new game has no save until one of these occurs. If saved on a cable car, you resume at its destination station.
-- Dinosaurs occasionally escape. Keep clear.
+- Dinosaurs occasionally escape by default. In Settings > Controls, turn off Dinosaur escapes to prevent them and return any escaped dinosaur to its habitat. This preference is saved in the current browser.
 - Settings includes Terms and Privacy tabs covering local play, hosted deployments, optional accounts, and possible host or AI-service data handling.
 
 | Key | Action |

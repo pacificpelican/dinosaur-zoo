@@ -5,17 +5,19 @@
   const PREFS_KEY = 'dfz.settings.v2';
   const LEGACY_PREFS_KEY = 'dfz.settings.v1';
   const musicChannels = ['auto', 'world', 'house', 'off'];
-  let prefs = { gameSpeed: 'default', simAwayNight: true };
+  let prefs = { gameSpeed: 'default', simAwayNight: true, dinosaurEscapes: true };
   try {
     const stored = JSON.parse(localStorage.getItem(PREFS_KEY) || '{}');
     const legacy = JSON.parse(localStorage.getItem(LEGACY_PREFS_KEY) || '{}');
     prefs = {
       gameSpeed: (stored.gameSpeed || legacy.gameSpeed) === 'relaxed' ? 'relaxed' : 'default',
-      simAwayNight: typeof stored.simAwayNight === 'boolean' ? stored.simAwayNight : true
+      simAwayNight: typeof stored.simAwayNight === 'boolean' ? stored.simAwayNight : true,
+      dinosaurEscapes: typeof stored.dinosaurEscapes === 'boolean' ? stored.dinosaurEscapes : true
     };
   } catch (e) { /* default preferences */ }
   G.gameSpeed = prefs.gameSpeed;
   G.simAwayNight = prefs.simAwayNight;
+  G.dinosaurEscapes = prefs.dinosaurEscapes;
   let engine, scene, cam, winCam, W, avatar, data, post, painterlyOn = true;
   const keys = {}, pad = { x: 0, y: 0 }, chatMove = { left: false, right: false, up: false, down: false };
   G.clearChatMovement = () => { Object.keys(chatMove).forEach((k) => { chatMove[k] = false; }); ['arrowleft', 'arrowright', 'arrowup', 'arrowdown'].forEach((k) => { keys[k] = false; }); };
@@ -74,11 +76,22 @@
   G.setPad = (v) => { G.showPad = v; $('pads').style.display = v ? '' : 'none'; };
   G.savePreferences = function () {
     prefs.simAwayNight = G.simAwayNight;
-    try { localStorage.setItem(PREFS_KEY, JSON.stringify({ gameSpeed: G.gameSpeed, simAwayNight: G.simAwayNight })); return true; }
+    try { localStorage.setItem(PREFS_KEY, JSON.stringify({ gameSpeed: G.gameSpeed, simAwayNight: G.simAwayNight, dinosaurEscapes: G.dinosaurEscapes })); return true; }
     catch (e) { U.toast('Could not save settings in this browser.'); return false; }
   };
   G.setGameSpeed = function (speed) {
     G.gameSpeed = speed === 'relaxed' ? 'relaxed' : 'default';
+    G.savePreferences();
+  };
+  G.setDinosaurEscapes = function (enabled) {
+    const wasEnabled = G.dinosaurEscapes;
+    G.dinosaurEscapes = !!enabled;
+    if (!G.dinosaurEscapes && E.escape) {
+      E.endEscape();
+      U.toast('Rangers have returned the dinosaur to its habitat.');
+    } else if (G.dinosaurEscapes && !wasEnabled) {
+      nextEscape = G.t + Z.rr(80, 130);
+    }
     G.savePreferences();
   };
   G.setSimAwayNight = function (enabled) {
@@ -309,7 +322,7 @@
       const a = e.act, d = Z.dist(a.x, a.z, G.player.x, G.player.z);
       if (d < 2.6 && knock <= 0 && !G.riding && !G.win && G.t > (e.cool || 0)) { knock = 2.2; e.cool = G.t + 9; const lost = Math.min(15, Z.state.money); money(-lost, 'The ' + a.sp.common + ' knocked you over! You dropped $' + lost + '.'); Z.Audio.sfx('roar'); }
       if (now > e.until) { E.endEscape(); U.toast('Rangers have calmed the ' + a.sp.common + ' and led it home.'); }
-    } else if (isOpen() && G.t > nextEscape && Z.state.ticketDay === Z.state.day) {
+    } else if (G.dinosaurEscapes && isOpen() && G.t > nextEscape && Z.state.ticketDay === Z.state.day) {
       nextEscape = G.t + Z.rr(90, 150);
       const info = E.startEscape(() => { const p = G.player; if (inPark(p) && !G.riding && !G.win && Z.dist(p.x, p.z, E.escape.act.x, E.escape.act.z) < 40) return { x: p.x, z: p.z }; const n = E.nearestNpc(E.escape.act.x, E.escape.act.z, 60); return n ? { x: n.x, z: n.z } : { x: 0, z: 30 }; });
       if (info) { Z.Audio.sfx('alarm'); U.toast('ALERT: A ' + info.act.sp.common + ' has escaped its habitat! Stay clear!', true); Z.popularityBoost(info.act.ex.id, 1.5); }

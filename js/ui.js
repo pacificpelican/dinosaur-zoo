@@ -264,6 +264,7 @@
         '<label class="setting-option"><input type="radio" name="gameSpeed" value="default" required ' + (G.gameSpeed === 'default' ? 'checked' : '') + '> Default (current speed)</label>' +
         '<label class="setting-option"><input type="radio" name="gameSpeed" value="relaxed" required ' + (G.gameSpeed === 'relaxed' ? 'checked' : '') + '> Relaxed (daytime passes at one-third speed)</label></fieldset>' +
         '<label class="setting-option setting-check"><input type="checkbox" id="ctSimNight" ' + (G.simAwayNight ? 'checked' : '') + '> Sim away night time (skip from 10 pm to 9 am during gameplay)</label>' +
+        '<label class="setting-option setting-check"><input type="checkbox" id="ctEscapes" ' + (G.dinosaurEscapes ? 'checked' : '') + '> Dinosaur escapes (turn off to end and prevent escapes)</label>' +
         '<p class="note">Relaxed speed affects 9 am to 9 pm; the nighttime fast-forward rate stays the same.</p>' +
         '<p class="row">Music <select id="ctCh"><option value="auto">Auto mix</option><option value="world">World music</option><option value="house">House (122 BPM)</option><option value="off">Off</option></select></p><p class="row">Volume <input type="range" id="ctVol" min="0" max="1" step="0.05" value="' + Z.Audio.volume + '"></p><p class="row"><label><input type="checkbox" id="ctPaint" ' + (G.painterly ? 'checked' : '') + '> Painterly filter</label> <label><input type="checkbox" id="ctPad" ' + (G.showPad ? 'checked' : '') + '> On-screen controller</label></p>';
     } else if (U.phoneTab === 'debug') {
@@ -370,6 +371,7 @@
       $('ctPad').onchange = (e) => G.setPad(e.target.checked);
       Array.from(s.querySelectorAll('input[name="gameSpeed"]')).forEach((input) => { input.onchange = () => { if (input.checked) G.setGameSpeed(input.value); }; });
       $('ctSimNight').onchange = (e) => G.setSimAwayNight(e.target.checked);
+      $('ctEscapes').onchange = (e) => G.setDinosaurEscapes(e.target.checked);
     }
   };
 })(window.Z);
