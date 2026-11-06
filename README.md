@@ -23,6 +23,7 @@ Optional backend settings (storage driver, Ollama / cloud LLM) live in `config.p
 - Talk to visitors, fans and tan-uniformed staff with `/`; join a group with `'`. Open the camera with `C` or the camera button, then press `'` to take a watermarked, downloadable shot.
 - The group-chat panel previews the latest 40 messages; open the chat with `/` to see and print the conversation for the current group.
 - Open the Zoo Phone with `P` or the phone button in the upper-right HUD.
+- Play Dino Dash on the phone: hold the right arrow or the run button to sprint, and release to recover stamina. Reach 300 meters before the dinosaur catches you. Switching tabs or closing the phone ends the run; it does not affect zoo progress.
 - Open ZooTV with the TV button in the upper-right HUD or the ZooTV phone tab to watch a selected animal wander, forage, rest, or fly around its habitat.
 - In Settings > Account, a signed-in account shows its status and a log-out option instead of the login form. Settings > Save/Load lets you choose explicitly between a browser save and (when signed in) a server save.
 - Saves include your approximate location and facing direction. The game autosaves about once a minute while playing and when you exit to the title; manual saves are available in Settings > Save/Load. If saved on a cable car, you resume at its destination station.

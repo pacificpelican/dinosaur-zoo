@@ -4,6 +4,7 @@
   const U = Z.UI = { bubbles: [], phoneTab: 'stats', dlg: null, photos: [], tvSpecies: 'trex' };
   const show = (id) => $(id).classList.remove('hidden'), hide = (id) => {
     if (id === 'mPhone') {
+      Z.PhoneChase.dispose();
       const frame = $('tvFrame');
       if (frame && frame.contentWindow) frame.contentWindow.postMessage('zootv-pause', '*');
     }
@@ -178,9 +179,10 @@
   U.shotPreview = function (url) { $('shotImg').src = url; $('shotDl').href = url; $('shotDl').download = 'Dinosaurs_and_Friends_Zoo-' + Z.stamp().replace(/[^0-9a-z]+/gi, '-') + '.png'; show('mShot'); };
 
   // ---- Zoo Phone ----
-  const TABS = [['acct', 'Account'], ['tv', 'ZooTV'], ['stats', 'Stats & Bank'], ['save', 'Save/Load'], ['ctl', 'Controls'], ['debug', 'Debug'], ['credits', 'Credits'], ['terms', 'Terms'], ['privacy', 'Privacy']];
+  const TABS = [['acct', 'Account'], ['tv', 'ZooTV'], ['chase', 'Dino Dash'], ['stats', 'Stats & Bank'], ['save', 'Save/Load'], ['ctl', 'Controls'], ['debug', 'Debug'], ['credits', 'Credits'], ['terms', 'Terms'], ['privacy', 'Privacy']];
   U.openPhone = function (tab) { U.phoneTab = tab || U.phoneTab; U.renderPhone(); show('mPhone'); };
   U.renderPhone = function () {
+    Z.PhoneChase.dispose();
     const G = Z.Game, st = Z.state; $('phTime').textContent = 'Day ' + st.day + ' ' + Z.fmtClock(st.minutes);
     $('phTabs').innerHTML = TABS.map((t) => '<button data-t="' + t[0] + '" class="' + (t[0] === U.phoneTab ? 'on' : '') + '">' + t[1] + '</button>').join('');
     $('phTabs').onclick = (e) => { if (e.target.dataset.t) { U.phoneTab = e.target.dataset.t; U.renderPhone(); } };
@@ -200,6 +202,12 @@
       U.tvSpecies = sp.id;
       h = '<h3>ZooTV</h3><div class="tv-shell"><iframe class="tv-frame" id="tvFrame" title="Animal habitat view" src="viewer.html?tv=1&amp;sp=' + encodeURIComponent(sp.id) + '"></iframe></div>' +
         '<p><label class="row">Animal <select id="tvSpecies">' + species.map((s) => '<option value="' + Z.esc(s.id) + '"' + (s.id === sp.id ? ' selected' : '') + '>' + Z.esc(s.common) + '</option>').join('') + '</select></label></p>';
+    } else if (U.phoneTab === 'chase') {
+      h = '<h3>Dino Dash</h3><div class="chase-game">' +
+        '<canvas id="chaseCanvas" width="400" height="160" role="img" aria-label="A dinosaur chases a running visitor across a black and white landscape."></canvas>' +
+        '<p id="chaseStatus" class="chase-status" role="status" aria-live="polite">Ready to run?</p>' +
+        '<div class="chase-controls"><button type="button" id="chaseStart">Start</button><button type="button" id="chaseRun">Hold to run &rarr;</button></div>' +
+        '<p>Reach 300 m before the dinosaur catches you. Hold the right arrow or the run button to sprint; release to recover stamina. Closing the phone or changing tabs ends the run.</p></div>';
     } else if (U.phoneTab === 'stats') {
       const known = Z.Species.allKnown(), shots = U.photos;
       h = '<h3>Bank</h3>' + kv([['Cash', '$' + st.money], ['Research progress', Math.floor(st.research) + ' / 100'], ['Discoveries', st.discoveries || 0], ['Babies hatched', st.hatched || 0], ['Photos taken', shots.length]]) +
@@ -241,6 +249,7 @@
         '<p class="note"><b>Last updated:</b> November 5, 2026.</p>';
     }
     s.innerHTML = h;
+    if (U.phoneTab === 'chase') Z.PhoneChase.mount();
     if ($('svLoadBrowser')) $('svLoadBrowser').disabled = !Z.Net.hasLocal();
     if ($('tvSpecies')) {
       $('tvSpecies').onchange = () => {
