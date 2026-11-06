@@ -35,7 +35,18 @@
     }
     return { where: 'browser', ok: local };
   };
-  N.load = async function () {
+  N.load = async function (source) {
+    if (source === 'browser') return { where: 'browser', state: N.loadLocal() };
+    if (source === 'server') {
+      if (!N.php || !N.user) return { where: 'server', state: null, error: 'Sign in to load a server save.' };
+      try {
+        const r = await N.api('load');
+        return r.ok && r.state ? { where: 'server', state: r.state } : { where: 'server', state: null, error: r.error || 'No server save found.' };
+      } catch (e) {
+        N.lastError = String(e.message || e);
+        return { where: 'server', state: null, error: 'Could not load the server save.' };
+      }
+    }
     if (N.php && N.user) {
       try { const r = await N.api('load'); if (r.ok && r.state) return { where: 'server', state: r.state }; } catch (e) { /* fall back */ }
     }

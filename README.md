@@ -20,6 +20,8 @@ Optional backend settings (storage driver, Ollama / cloud LLM) live in `config.p
 - The hotel ATM lets you withdraw $100 at a time, up to $300 per in-game day, for extended visits.
 - Walk up to the glass viewing windows and press `.` for a close-up. Buy Brazil nuts and feed the small dinosaurs in the petting pen. Ride the cable car. Fund research at the Genome Lab to rediscover or synthesize new species.
 - Talk to visitors, fans and tan-uniformed staff with `/`; join a group with `'`. Press `C` for the camera: shots are watermarked and downloadable.
+- Open ZooTV with the TV button in the upper-right HUD or the ZooTV phone tab to watch a selected animal wander, forage, rest, or fly around its habitat.
+- In Settings > Account, a signed-in account shows its status and a log-out option instead of the login form. Settings > Save/Load lets you choose explicitly between a browser save and (when signed in) a server save.
 - Dinosaurs occasionally escape. Keep clear.
 - Settings includes Terms and Privacy tabs covering local play, hosted deployments, optional accounts, and possible host or AI-service data handling.
 
@@ -41,4 +43,4 @@ Optional backend settings (storage driver, Ollama / cloud LLM) live in `config.p
 - `api/index.php`: status, accounts, saves, AI chat proxy (Ollama, cloud, or fallback)
 - `vendor/babylon.js`: vendored Babylon.js
 - `art/`: photographs and studies used for the parakeet window and species design
-- `viewer.html`: species gallery for development (`?sp=trex&state=walk`)
+- `viewer.html`: species gallery for development (`?sp=trex&state=eat`) and ZooTV habitat views (`?tv=1&sp=trex`)

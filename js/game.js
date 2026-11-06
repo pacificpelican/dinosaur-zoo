@@ -167,6 +167,7 @@
     const end = () => { dpActive = false; pad.x = pad.y = 0; const nub = dp.querySelector('.nub'); if (nub) nub.style.transform = ''; };
     dp.addEventListener('pointerup', end); dp.addEventListener('pointercancel', end);
     $('btnCam').onclick = () => { if (G.started && !anyBlocking()) press('c'); };
+    $('btnTV').onclick = () => { if (G.started && !anyBlocking()) U.openPhone('tv'); };
     $('btnPause').onclick = () => { if (G.started) U.show('mPause'); };
     $('btnMute').onclick = () => { Z.Audio.setMuted(!Z.Audio.muted); };
     $('btnLeave').onclick = () => G.leaveGroup();

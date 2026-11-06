@@ -1,29 +1,74 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><title>Species viewer - Dinosaurs &amp; Friends Zoo</title>
-<style>html,body{margin:0;height:100%;background:#2a1b3d;font:14px system-ui}canvas{width:100%;height:100%;display:block}#bar{position:fixed;top:8px;left:8px;color:#fff;background:#0008;padding:6px 10px;border-radius:6px}a{color:#ffb25a}</style></head>
+<style>html,body{margin:0;height:100%;overflow:hidden;background:#2a1b3d;font:14px system-ui}canvas{width:100%;height:100%;display:block}#bar{position:fixed;top:8px;left:8px;color:#fff;background:#0008;padding:6px 10px;border-radius:6px}a{color:#ffb25a}.tv{background:#426c53}.tv #bar{display:none}</style></head>
 <body><canvas id="c"></canvas><div id="bar"></div>
 <script src="vendor/babylon.js"></script><script src="js/util.js"></script><script src="js/dino.js"></script><script src="js/birds.js"></script>
 <script>
 // Developer gallery for the procedural animals: viewer.html?sp=trex&state=walk
 (async () => {
-  const q = new URLSearchParams(location.search), data = await Z.fetchJson('data/species.json');
+  const q = new URLSearchParams(location.search), data = await Z.fetchJson('data/species.json'), tv = q.get('tv') === '1';
+  document.body.classList.toggle('tv', tv);
   const all = data.base.concat(data.rediscovered), sp = all.find((s) => s.id === (q.get('sp') || 'trex')) || all[0];
-  document.getElementById('bar').innerHTML = all.map((s) => '<a href="?sp=' + s.id + '&state=' + (q.get('state') || 'walk') + '">' + s.common + '</a>').join(' · ');
+  if (!tv) document.getElementById('bar').innerHTML = all.map((s) => '<a href="?sp=' + s.id + '&state=' + (q.get('state') || 'walk') + '">' + s.common + '</a>').join(' · ');
   const engine = new BABYLON.Engine(document.getElementById('c'), true, { preserveDrawingBuffer: true, alpha: false }), scene = new BABYLON.Scene(engine);
-  scene.clearColor = new BABYLON.Color4(0.55, 0.45, 0.7, 1);
+  scene.clearColor = tv ? new BABYLON.Color4(0.58, 0.72, 0.76, 1) : new BABYLON.Color4(0.55, 0.45, 0.7, 1);
   const hl = new BABYLON.HemisphericLight('h', new BABYLON.Vector3(0.2, 1, 0.3), scene); hl.intensity = 0.9;
   const dl = new BABYLON.DirectionalLight('d', new BABYLON.Vector3(-0.5, -1, 0.6), scene); dl.intensity = 1.1;
   const g = BABYLON.MeshBuilder.CreateGround('g', { width: 60, height: 60 }, scene); const gm = new BABYLON.StandardMaterial('gm', scene); gm.diffuseColor = new BABYLON.Color3(0.45, 0.6, 0.35); gm.specularColor = BABYLON.Color3.Black(); g.material = gm;
-  const size = Math.max(sp.len, 1);
-  const cam = new BABYLON.ArcRotateCamera('c', -2.2, 1.25, size * 2.2 + 1, new BABYLON.Vector3(0, size * 0.25, 0), scene); cam.attachControl(document.getElementById('c'), true); cam.minZ = 0.01; cam.wheelPrecision = 20;
-  const a = Z.Dino.build(scene, sp, 1, 3, {});
-  const st = q.get('state') || 'walk';
+  const scale = tv && sp.form === 'budgie' ? 5 : tv && sp.form === 'tinybird' ? 2 : 1, size = Math.max(sp.len * scale, 1);
+  const cam = new BABYLON.ArcRotateCamera('c', -2.2, 1.25, size * 2.2 + 1, new BABYLON.Vector3(0, size * 0.25, 0), scene); if (!tv) cam.attachControl(document.getElementById('c'), true); cam.minZ = 0.01; cam.wheelPrecision = 20;
+  const a = Z.Dino.build(scene, sp, scale, 3, {});
+  const st = q.get('state') || (sp.form === 'pterosaur' ? 'fly' : 'walk');
+  let tvModes = null, tvRng = null, currentMode = 0, previousMode = 0, modeChangedAt = 0, nextModeAt = 0, lastFrame = 0;
+  if (tv) {
+    const shrubMats = ['#497845', '#638a49', '#7b9550'].map((color, i) => { const m = new BABYLON.StandardMaterial('shrub_' + i, scene); m.diffuseColor = BABYLON.Color3.FromHexString(color); return m; });
+    tvRng = Z.makeRng(sp.id.length * 107);
+    for (let i = 0; i < 14; i++) {
+      const angle = tvRng() * Math.PI * 2, radius = size * 0.65 + tvRng() * size * 0.45, x = Math.cos(angle) * radius, z = Math.sin(angle) * radius, diameter = size * (0.12 + tvRng() * 0.12), mound = BABYLON.MeshBuilder.CreateSphere('habitat shrub', { diameter, segments: 7 }, scene);
+      mound.scaling.set(1.5, 0.65 + tvRng() * 0.5, 1); mound.position.set(x, diameter * mound.scaling.y * 0.42, z); mound.material = shrubMats[i % shrubMats.length];
+    }
+    const states = sp.form === 'pterosaur'
+      ? [{ fly: 1 }, { fly: 0.05, look: 0.5 }, { fly: 0, feed: 0.4 }]
+      : sp.form === 'budgie'
+        ? [{ fly: 0.8, chat: 0.25 }, { fly: 0, preen: 0.7 }, { fly: 0, feed: 0.6, chat: 0.15 }]
+        : [{ walk: 0.8, speed: 0.65 }, { walk: 0.12, eat: 0.85 }, { walk: 0, sleep: 0.85 }];
+    tvModes = states; currentMode = 0; previousMode = states.length - 1;
+    modeChangedAt = performance.now() / 1000 - 1.2;
+    nextModeAt = modeChangedAt + 1.2 + 5.5 + tvRng() * 2.5;
+  }
   window.__a = a; window.__cam = cam; if (q.get('alpha')) { cam.alpha = +q.get('alpha'); cam.beta = +(q.get('beta') || 1.3); if (q.get('r')) cam.radius = +q.get('r'); }
   scene.onBeforeRenderObservable.add(() => {
     const t = performance.now() / 1000;
-    a.update(t, st === 'walk' ? { walk: 1, fly: 0, bathe: 0 } : st === 'fly' ? { fly: 1 } : { walk: 0, fly: 0, bathe: 0, eat: st === 'eat' ? 1 : 0, sleep: st === 'sleep' ? 1 : 0 });
+    if (!tv) {
+      a.update(t, st === 'walk' ? { walk: 1, fly: 0, bathe: 0 } : st === 'fly' ? { fly: 1 } : { walk: 0, fly: 0, bathe: 0, eat: st === 'eat' ? 1 : 0, sleep: st === 'sleep' ? 1 : 0 });
+      return;
+    }
+    if (t >= nextModeAt) {
+      previousMode = currentMode;
+      currentMode = (currentMode + 1) % tvModes.length;
+      modeChangedAt = t;
+      nextModeAt = t + 5.5 + tvRng() * 2.5;
+    }
+    const blend = Z.clamp((t - modeChangedAt) / 1.2, 0, 1), prev = tvModes[previousMode], next = tvModes[currentMode];
+    const activity = {};
+    new Set(Object.keys(prev).concat(Object.keys(next))).forEach((key) => { activity[key] = (prev[key] || 0) * (1 - blend) + (next[key] || 0) * blend; });
+    a.update(t, activity);
+    const dt = lastFrame ? Math.min(0.05, t - lastFrame) : 0; lastFrame = t;
+    const moving = activity.walk || activity.fly || 0;
+    if (moving > 0.02) {
+      const radius = Math.max(1.5, Math.min(4, size * 0.32));
+      a.root.rotation.y += Math.sin(t * 0.21 + sp.id.length) * 0.04 * dt + (Math.hypot(a.root.position.x, a.root.position.z) > radius ? Math.PI * dt : 0);
+      const speed = (activity.fly ? 0.8 : 0.38) * moving;
+      a.root.position.x += Math.sin(a.root.rotation.y) * speed * dt;
+      a.root.position.z += Math.cos(a.root.rotation.y) * speed * dt;
+    }
+    if (sp.form === 'pterosaur' || sp.form === 'budgie') {
+      const flying = activity.fly || 0;
+      a.root.position.y += ((flying * Math.max(0.6, size * 0.12) + Math.sin(t * 0.7) * 0.08) - a.root.position.y) * Math.min(1, dt * 1.5);
+    }
   });
   engine.runRenderLoop(() => scene.render()); addEventListener('resize', () => engine.resize());
+  addEventListener('message', (e) => { if (e.source === parent && e.data === 'zootv-pause') engine.stopRenderLoop(); });
   window.__ready = true;
 })();
 </script></body></html>

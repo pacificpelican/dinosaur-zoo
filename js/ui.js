@@ -1,8 +1,14 @@
 /* DOM layer: toasts, speech bubbles, modals, dialogue, viewing-window overlay and the Zoo Phone (settings). */
 (function (Z) {
   const $ = (id) => document.getElementById(id);
-  const U = Z.UI = { bubbles: [], phoneTab: 'stats', dlg: null, photos: [] };
-  const show = (id) => $(id).classList.remove('hidden'), hide = (id) => $(id).classList.add('hidden');
+  const U = Z.UI = { bubbles: [], phoneTab: 'stats', dlg: null, photos: [], tvSpecies: 'trex' };
+  const show = (id) => $(id).classList.remove('hidden'), hide = (id) => {
+    if (id === 'mPhone') {
+      const frame = $('tvFrame');
+      if (frame && frame.contentWindow) frame.contentWindow.postMessage('zootv-pause', '*');
+    }
+    $(id).classList.add('hidden');
+  };
   U.show = show; U.hide = hide;
   U.anyModal = () => ['mTitle', 'mPause', 'mPhone', 'mDialog', 'mShot', 'mInfo', 'winBar'].some((id) => !$(id).classList.contains('hidden'));
 
@@ -112,7 +118,7 @@
   U.shotPreview = function (url) { $('shotImg').src = url; $('shotDl').href = url; $('shotDl').download = 'dinosaurs-friends-zoo-' + Z.stamp().replace(/[^0-9a-z]+/gi, '-') + '.png'; show('mShot'); };
 
   // ---- Zoo Phone ----
-  const TABS = [['acct', 'Account'], ['stats', 'Stats & Bank'], ['save', 'Save/Load'], ['ctl', 'Controls'], ['debug', 'Debug'], ['credits', 'Credits'], ['terms', 'Terms'], ['privacy', 'Privacy']];
+  const TABS = [['acct', 'Account'], ['tv', 'ZooTV'], ['stats', 'Stats & Bank'], ['save', 'Save/Load'], ['ctl', 'Controls'], ['debug', 'Debug'], ['credits', 'Credits'], ['terms', 'Terms'], ['privacy', 'Privacy']];
   U.openPhone = function (tab) { U.phoneTab = tab || U.phoneTab; U.renderPhone(); show('mPhone'); };
   U.renderPhone = function () {
     const G = Z.Game, st = Z.state; $('phTime').textContent = 'Day ' + st.day + ' ' + Z.fmtClock(st.minutes);
@@ -125,14 +131,25 @@
     if (U.phoneTab === 'acct') {
       h = '<h3>Account</h3>' + kv([['Playing as', Z.esc(G.name)], ['Signed in', Z.Net.user ? Z.esc(Z.Net.user) : (Z.Net.php ? 'No (guest)' : 'Guest (no PHP backend)')]]) +
         '<p><label class="row">Display name <input id="acName" maxlength="18" value="' + Z.esc(G.name) + '"></label></p><p>' + btn('acSet', 'Save name') + '</p>';
-      if (Z.Net.php) h += '<h3>Server account</h3><p class="note">Optional: sign in to keep saves on the server.</p><div class="col" style="gap:4px"><input id="acU" placeholder="username" maxlength="24"><input id="acP" type="password" placeholder="password"></div><p class="row">' + btn('acLogin', 'Log in') + btn('acReg', 'Register', 'alt') + (Z.Net.user ? btn('acOut', 'Log out', 'ghost') : '') + '</p><p class="note" id="acMsg"></p>';
+      if (Z.Net.php && Z.Net.user) h += '<h3>Server account</h3><p class="note">You are signed in as <b>' + Z.esc(Z.Net.user) + '</b>. Server saves are available for this account.</p><p>' + btn('acOut', 'Log out', 'ghost') + '</p><p class="note" id="acMsg"></p>';
+      else if (Z.Net.php) h += '<h3>Server account</h3><p class="note">Optional: sign in to keep saves on the server.</p><div class="col" style="gap:4px"><input id="acU" placeholder="username" maxlength="24"><input id="acP" type="password" placeholder="password"></div><p class="row">' + btn('acLogin', 'Log in') + btn('acReg', 'Register', 'alt') + '</p><p class="note" id="acMsg"></p>';
       else h += '<p class="note">No PHP backend detected, so accounts are unavailable. Your progress is saved in this browser.</p>';
+    } else if (U.phoneTab === 'tv') {
+      const species = Z.Species.data.base.concat(Z.Species.data.rediscovered);
+      const sp = species.find((s) => s.id === U.tvSpecies) || species.find((s) => s.id === 'trex') || species[0];
+      U.tvSpecies = sp.id;
+      h = '<h3>ZooTV</h3><div class="tv-shell"><iframe class="tv-frame" id="tvFrame" title="Animal habitat view" src="viewer.html?tv=1&amp;sp=' + encodeURIComponent(sp.id) + '"></iframe></div>' +
+        '<p><label class="row">Animal <select id="tvSpecies">' + species.map((s) => '<option value="' + Z.esc(s.id) + '"' + (s.id === sp.id ? ' selected' : '') + '>' + Z.esc(s.common) + '</option>').join('') + '</select></label></p>';
     } else if (U.phoneTab === 'stats') {
       const known = Z.Species.allKnown(), shots = U.photos;
       h = '<h3>Bank</h3>' + kv([['Cash', '$' + st.money], ['Research progress', Math.floor(st.research) + ' / 100'], ['Discoveries', st.discoveries || 0], ['Babies hatched', st.hatched || 0], ['Photos taken', shots.length]]) +
         '<p>' + btn('stFund', 'Fund genome research ($' + Z.world.data.prices.research + ')') + '</p><h3>Zoopedia</h3><p>' + known.map((sp) => '<span class="pill ' + (sp.synthesized ? 'warn' : 'ok') + '">' + Z.esc(sp.common) + '</span>').join('') + '</p><h3>Camera roll</h3>' + (shots.length ? '<div class="gallery" id="stGal">' + shots.map((u, i) => '<img data-i="' + i + '" src="' + u + '" alt="Photo ' + (i + 1) + '">').join('') + '</div>' : '<p class="note">No photos yet. Press C to open the camera.</p>');
     } else if (U.phoneTab === 'save') {
-      h = '<h3>Save / Load</h3>' + kv([['Storage', Z.esc(Z.Net.storageLabel())], ['Browser save', Z.Net.hasLocal() ? 'Yes' : 'None']]) + '<p class="row">' + btn('svSave', 'Save now') + btn('svLoad', 'Load', 'alt') + btn('svDel', 'Delete browser save', 'ghost') + '</p><p class="row">' + btn('svExp', 'Export JSON', 'alt') + '<input type="file" id="svImp" accept="application/json"></p><p>' + btn('svNew', 'Start new game', 'ghost') + '</p><p class="note" id="svMsg"></p>';
+      h = '<h3>Save / Load</h3>' + kv([['Storage', Z.esc(Z.Net.storageLabel())], ['Browser save', Z.Net.hasLocal() ? 'Available' : 'None'], ['Server account', Z.Net.user ? 'Signed in as ' + Z.esc(Z.Net.user) : 'Not signed in']]) +
+        '<p class="note">Loading is explicit: choose the browser save on this device or your server account save. Loading one does not fall back to the other. “Save now” stores to the browser and, when signed in, the server.</p>' +
+        '<h4>Browser save</h4><p>' + btn('svLoadBrowser', 'Load browser save', 'alt') + ' ' + btn('svDel', 'Delete browser save', 'ghost') + '</p>' +
+        (Z.Net.php && Z.Net.user ? '<h4>Server save</h4><p>' + btn('svLoadServer', 'Load server save', 'alt') + '</p>' : '<p class="note">Sign in on the Account tab to load a server save.</p>') +
+        '<p>' + btn('svSave', 'Save now') + '</p><p class="row">' + btn('svExp', 'Export JSON', 'alt') + '<input type="file" id="svImp" accept="application/json"></p><p>' + btn('svNew', 'Start new game', 'ghost') + '</p><p class="note" id="svMsg"></p>';
     } else if (U.phoneTab === 'ctl') {
       h = '<h3>Controls</h3>' + kv([['Move', 'WASD / arrows / D-pad'], ['Run', 'Shift or hold . when not near an interaction'], ['Rotate camera', 'Q / E or drag'], ['Talk', '/ or the top button'], ['Interact / enter', 'Tap . or press X / Enter'], ['Eat / drink', ','], ['Select (join group, shutter)', "'"], ['Camera', 'C'], ['Pause', 'Esc']]) +
         '<h3>Settings</h3><p class="row">Music <select id="ctCh"><option value="auto">Auto mix</option><option value="world">World music</option><option value="house">House (122 BPM)</option><option value="off">Off</option></select></p><p class="row">Volume <input type="range" id="ctVol" min="0" max="1" step="0.05" value="' + Z.Audio.volume + '"></p><p class="row"><label><input type="checkbox" id="ctPaint" ' + (G.painterly ? 'checked' : '') + '> Painterly filter</label> <label><input type="checkbox" id="ctPad" ' + (G.showPad ? 'checked' : '') + '> On-screen controller</label></p>';
@@ -159,13 +176,26 @@
         '<p class="note"><b>Last updated:</b> November 5, 2026.</p>';
     }
     s.innerHTML = h;
+    if ($('svLoadBrowser')) $('svLoadBrowser').disabled = !Z.Net.hasLocal();
+    if ($('tvSpecies')) {
+      $('tvSpecies').onchange = () => {
+        U.tvSpecies = $('tvSpecies').value;
+        $('tvFrame').src = 'viewer.html?tv=1&sp=' + encodeURIComponent(U.tvSpecies);
+      };
+    }
     on('acSet', () => { G.name = ($('acName').value || 'Player 1').slice(0, 18); st.name = G.name; $('badge').textContent = G.name; U.toast('Name saved'); });
     const auth = async (a) => { try { const r = await Z.Net.api(a, { username: $('acU').value, password: $('acP').value }); $('acMsg').textContent = r.ok ? 'Done.' : (r.error || 'Failed'); if (r.ok) { await Z.Net.detect(); U.renderPhone(); } } catch (e) { $('acMsg').textContent = 'Backend error'; } };
     on('acLogin', () => auth('login')); on('acReg', () => auth('register')); on('acOut', async () => { try { await Z.Net.api('logout', {}); } catch (e) { /* ignore */ } await Z.Net.detect(); U.renderPhone(); });
     on('stFund', () => { G.fundResearch(); U.renderPhone(); });
     if ($('stGal')) $('stGal').onclick = (e) => { if (e.target.dataset.i) U.shotPreview(U.photos[+e.target.dataset.i]); };
     on('svSave', async () => { const r = await G.save(); $('svMsg').textContent = r.ok ? 'Saved to ' + r.where + '.' : 'Save failed.'; });
-    on('svLoad', async () => { const ok = await G.loadSaved(); $('svMsg').textContent = ok ? 'Loaded.' : 'No save found.'; if (ok) hide('mPhone'); });
+    const loadFrom = async (source) => {
+      const r = await Z.Net.load(source);
+      if (!r.state) { $('svMsg').textContent = r.error || 'No ' + source + ' save found.'; return; }
+      G.applyState(r.state); hide('mPhone'); U.toast('Loaded ' + source + ' save.');
+    };
+    on('svLoadBrowser', () => loadFrom('browser'));
+    on('svLoadServer', () => loadFrom('server'));
     on('svDel', () => { Z.Net.clearLocal(); $('svMsg').textContent = 'Browser save deleted.'; });
     on('svExp', () => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(G.snapshot())], { type: 'application/json' })); a.download = 'dfz-save.json'; a.click(); });
     if ($('svImp')) $('svImp').onchange = (e) => { const f = e.target.files[0]; if (!f) return; f.text().then((t) => { try { G.applyState(JSON.parse(t)); hide('mPhone'); U.toast('Save imported'); } catch (x) { $('svMsg').textContent = 'Invalid file.'; } }); };
