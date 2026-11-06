@@ -25,6 +25,7 @@ Optional backend settings (storage driver, Ollama / cloud LLM) live in `config.p
 - Open the Zoo Phone with `P` or the phone button in the upper-right HUD.
 - Open ZooTV with the TV button in the upper-right HUD or the ZooTV phone tab to watch a selected animal wander, forage, rest, or fly around its habitat.
 - In Settings > Account, a signed-in account shows its status and a log-out option instead of the login form. Settings > Save/Load lets you choose explicitly between a browser save and (when signed in) a server save.
+- Saves include your approximate location and facing direction. The game autosaves about once a minute while playing and when you exit to the title; manual saves are available in Settings > Save/Load. If saved on a cable car, you resume at its destination station.
 - Dinosaurs occasionally escape. Keep clear.
 - Settings includes Terms and Privacy tabs covering local play, hosted deployments, optional accounts, and possible host or AI-service data handling.
 

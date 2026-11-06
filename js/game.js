@@ -32,7 +32,8 @@
 
   // ---------- state ----------
   G.snapshot = () => Object.assign({}, Z.state, {
-    name: G.name, simAwayNight: G.simAwayNight, musicChannel: Z.Audio.channel, savedAt: Date.now()
+    name: G.name, simAwayNight: G.simAwayNight, musicChannel: Z.Audio.channel,
+    playerPosition: savedPlayerPosition(), savedAt: Date.now()
   });
   G.applyState = function (s) {
     const f = freshState(s.name); Z.state = Object.assign(f, s); Z.state.inv = Object.assign({ soda: 0, funnel: 0, nuts: 0 }, s.inv);
@@ -43,7 +44,14 @@
     G.savePreferences();
     Z.state.custom = Z.state.custom || []; G.name = Z.state.name || 'Player 1'; $('badge').textContent = G.name;
     Z.Species.syncUid(); E.rebuildAnimals(); G.leaveGroup(true); G.riding = null; if (G.win) G.closeWindow();
-    placePlayer(0, -52, 0); W.setTime(Z.state.minutes); syncGate(); syncCrowd(true); hud();
+    W.setTime(Z.state.minutes); syncGate();
+    const p = s.playerPosition;
+    if (p && Number.isFinite(p.x) && Number.isFinite(p.z) && Number.isFinite(p.h) &&
+        p.x >= -170 && p.x <= 170 && p.z >= -140 && p.z <= 170) {
+      if (!isOpen() && inPark(p)) placePlayer(0, -36, Math.PI);
+      else { const pos = W.collide(p.x, p.z, 0.5); placePlayer(Z.clamp(pos[0], -170, 170), Z.clamp(pos[1], -140, 170), p.h); }
+    } else placePlayer(0, -52, 0);
+    syncCrowd(true); hud();
   };
   G.save = async function () { const r = await Z.Net.save(G.snapshot()); return r; };
   G.loadSaved = async function () { const r = await Z.Net.load(); if (!r.state) return false; G.applyState(r.state); return true; };
@@ -77,6 +85,12 @@
   };
 
   function placePlayer(x, z, h) { G.player.x = x; G.player.z = z; G.player.h = h || 0; }
+  function savedPlayerPosition() {
+    let p = G.player;
+    if (G.riding) { const board = W.data.cable[G.riding.dest.toLowerCase()].board; p = { x: board.x, z: board.z, h: 0 }; }
+    if (!isOpen() && inPark(p)) return { x: 0, z: -36, h: Math.PI };
+    return { x: p.x, z: p.z, h: p.h };
+  }
   function money(d, msg) { Z.state.money += d; if (msg) U.toast(msg); hud(); }
   function hud() {
     const s = Z.state, open = isOpen();
