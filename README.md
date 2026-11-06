@@ -18,7 +18,7 @@ Optional backend settings (storage driver, Ollama / cloud LLM) live in `config.p
 
 - Buy admission at the gate (box office, 9 am to 9 pm), then explore. A day is about 5 minutes open; the night fast-forwards. Sleep at Hotel Cretaceous (outside the gate) to skip to morning.
 - The hotel ATM lets you withdraw $100 at a time, up to $300 per in-game day, for extended visits.
-- Settings > Controls lets you slow daytime to one-third speed and optionally skip gameplay nights from 10 pm to 9 am; nighttime speed is otherwise unchanged.
+- Settings > Controls lets you slow daytime to one-third speed and skips gameplay nights from 10 pm to 9 am by default (you can turn this off); nighttime speed is otherwise unchanged. The night-skip setting and music choice are stored with the game save.
 - Walk up to the glass viewing windows and press `.` for a close-up. Buy Brazil nuts and feed the small dinosaurs in the petting pen. Ride the cable car. Fund research at the Genome Lab to rediscover or synthesize new species.
 - Talk to visitors, fans and tan-uniformed staff with `/`; join a group with `'`. Press `C` for the camera: shots are watermarked and downloadable.
 - Open ZooTV with the TV button in the upper-right HUD or the ZooTV phone tab to watch a selected animal wander, forage, rest, or fly around its habitat.

@@ -2,11 +2,17 @@
 (function (Z) {
   const B = BABYLON, U = Z.UI, E = Z.Ent, $ = (id) => document.getElementById(id);
   const G = Z.Game = { name: 'Player 1', player: { x: 0, z: -52, h: 0 }, group: null, painterly: true, showPad: true, t: 0, started: false, riding: null, win: null };
-  const PREFS_KEY = 'dfz.settings.v1';
-  let prefs = { gameSpeed: 'default', simAwayNight: false };
+  const PREFS_KEY = 'dfz.settings.v2';
+  const LEGACY_PREFS_KEY = 'dfz.settings.v1';
+  const musicChannels = ['auto', 'world', 'house', 'off'];
+  let prefs = { gameSpeed: 'default', simAwayNight: true };
   try {
     const stored = JSON.parse(localStorage.getItem(PREFS_KEY) || '{}');
-    prefs = { gameSpeed: stored.gameSpeed === 'relaxed' ? 'relaxed' : 'default', simAwayNight: stored.simAwayNight === true };
+    const legacy = JSON.parse(localStorage.getItem(LEGACY_PREFS_KEY) || '{}');
+    prefs = {
+      gameSpeed: (stored.gameSpeed || legacy.gameSpeed) === 'relaxed' ? 'relaxed' : 'default',
+      simAwayNight: typeof stored.simAwayNight === 'boolean' ? stored.simAwayNight : true
+    };
   } catch (e) { /* default preferences */ }
   G.gameSpeed = prefs.gameSpeed;
   G.simAwayNight = prefs.simAwayNight;
@@ -17,16 +23,24 @@
 
   const freshState = (name) => ({
     name: name || 'Player 1', money: 300, day: 1, minutes: 540, animals: Z.Species.freshAnimals(), custom: [], discovered: [], research: 30,
-    ticketDay: 0, inv: { soda: 0, funnel: 0, nuts: 0 }, discoveries: 0, hatched: 0, ate: 0, photos: 0, atmWithdrawnDay: 0, atmWithdrawn: 0
+    ticketDay: 0, inv: { soda: 0, funnel: 0, nuts: 0 }, discoveries: 0, hatched: 0, ate: 0, photos: 0, atmWithdrawnDay: 0, atmWithdrawn: 0,
+    simAwayNight: G.simAwayNight, musicChannel: Z.Audio.channel
   });
   const isOpen = () => Z.state.minutes >= data.hours.open * 60 && Z.state.minutes < data.hours.close * 60;
   const inPark = (p) => p.x > W.data.park.x0 && p.x < W.data.park.x1 && p.z > W.data.park.z0 && p.z < W.data.park.z1;
   G.isOpen = isOpen;
 
   // ---------- state ----------
-  G.snapshot = () => Object.assign({}, Z.state, { name: G.name, savedAt: Date.now() });
+  G.snapshot = () => Object.assign({}, Z.state, {
+    name: G.name, simAwayNight: G.simAwayNight, musicChannel: Z.Audio.channel, savedAt: Date.now()
+  });
   G.applyState = function (s) {
     const f = freshState(s.name); Z.state = Object.assign(f, s); Z.state.inv = Object.assign({ soda: 0, funnel: 0, nuts: 0 }, s.inv);
+    G.simAwayNight = typeof s.simAwayNight === 'boolean' ? s.simAwayNight : prefs.simAwayNight;
+    Z.state.simAwayNight = G.simAwayNight;
+    const musicChannel = musicChannels.includes(s.musicChannel) ? s.musicChannel : Z.Audio.channel;
+    Z.Audio.setChannel(musicChannel); Z.state.musicChannel = musicChannel;
+    G.savePreferences();
     Z.state.custom = Z.state.custom || []; G.name = Z.state.name || 'Player 1'; $('badge').textContent = G.name;
     Z.Species.syncUid(); E.rebuildAnimals(); G.leaveGroup(true); G.riding = null; if (G.win) G.closeWindow();
     placePlayer(0, -52, 0); W.setTime(Z.state.minutes); syncGate(); syncCrowd(true); hud();
@@ -41,6 +55,7 @@
   G.setPainterly = (v) => { G.painterly = v; if (post) post.setEnabled ? 0 : 0; painterlyOn = v; };
   G.setPad = (v) => { G.showPad = v; $('pads').style.display = v ? '' : 'none'; };
   G.savePreferences = function () {
+    prefs.simAwayNight = G.simAwayNight;
     try { localStorage.setItem(PREFS_KEY, JSON.stringify({ gameSpeed: G.gameSpeed, simAwayNight: G.simAwayNight })); return true; }
     catch (e) { U.toast('Could not save settings in this browser.'); return false; }
   };
@@ -50,7 +65,15 @@
   };
   G.setSimAwayNight = function (enabled) {
     G.simAwayNight = !!enabled;
+    Z.state.simAwayNight = G.simAwayNight;
     G.savePreferences();
+    G.save();
+  };
+  G.setMusicChannel = function (channel) {
+    if (!musicChannels.includes(channel)) return;
+    Z.Audio.setChannel(channel);
+    Z.state.musicChannel = channel;
+    G.save();
   };
 
   function placePlayer(x, z, h) { G.player.x = x; G.player.z = z; G.player.h = h || 0; }

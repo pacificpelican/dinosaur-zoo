@@ -223,7 +223,7 @@
     if ($('svImp')) $('svImp').onchange = (e) => { const f = e.target.files[0]; if (!f) return; f.text().then((t) => { try { G.applyState(JSON.parse(t)); hide('mPhone'); U.toast('Save imported'); } catch (x) { $('svMsg').textContent = 'Invalid file.'; } }); };
     on('svNew', () => U.info('Start a new game?', 'Your current progress will be replaced.', [{ label: 'Cancel', alt: true }, { label: 'New game', fn: () => { hide('mPhone'); G.newGame(); } }]));
     if ($('ctCh')) {
-      $('ctCh').value = Z.Audio.channel; $('ctCh').onchange = (e) => Z.Audio.setChannel(e.target.value);
+      $('ctCh').value = Z.Audio.channel; $('ctCh').onchange = (e) => G.setMusicChannel(e.target.value);
       $('ctVol').oninput = (e) => Z.Audio.setVolume(+e.target.value);
       $('ctPaint').onchange = (e) => G.setPainterly(e.target.checked);
       $('ctPad').onchange = (e) => G.setPad(e.target.checked);
