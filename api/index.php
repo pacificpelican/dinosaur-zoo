@@ -32,7 +32,10 @@ class JsonStore extends Store {
         return is_array($d) ? $d : [];
     }
     private function write(string $f, array $d): void {
-        file_put_contents("$this->dir/$f.php", "<?php http_response_code(404); exit; ?>\n" . json_encode($d), LOCK_EX);
+        $json = json_encode($d);
+        if ($json === false || @file_put_contents("$this->dir/$f.php", "<?php http_response_code(404); exit; ?>\n" . $json, LOCK_EX) === false) {
+            throw new RuntimeException('Could not write local storage.');
+        }
     }
     function findUser(string $name): ?array {
         foreach ($this->read('users')['users'] ?? [] as $u) if (strtolower($u['name']) === strtolower($name)) return $u;
@@ -147,7 +150,10 @@ function aiComplete(array $c, string $tier, array $messages): ?string {
 
 // ---------- request handling ----------
 session_set_cookie_params(['httponly' => true, 'samesite' => 'Lax']);
-session_start();
+if (!@session_start()) {
+    error_log('Zoo API: failed to start PHP session; check session storage configuration and permissions.');
+    out(['ok' => false, 'error' => 'The server could not start a session. Please contact the site administrator.'], 503);
+}
 $action = $_GET['action'] ?? 'status';
 $method = $_SERVER['REQUEST_METHOD'];
 $in = [];
@@ -161,6 +167,18 @@ $uid = (int)($_SESSION['uid'] ?? 0);
 $uname = (string)($_SESSION['uname'] ?? '');
 
 function cleanName(string $n): string { return preg_replace('/[^A-Za-z0-9_\- ]/', '', trim($n)) ?? ''; }
+function signIn(int $id, string $name, bool $created): void {
+    if (!@session_regenerate_id(true)) {
+        error_log('Zoo API: failed to regenerate PHP session ID.');
+        out(['ok' => false, 'error' => $created ? 'Account created, but the server could not start your sign-in session. Try logging in.' : 'The server could not start your sign-in session. Please try again or contact the site administrator.'], 503);
+    }
+    $_SESSION['uid'] = $id; $_SESSION['uname'] = $name;
+    if (!@session_write_close()) {
+        error_log('Zoo API: failed to write PHP session; check session storage configuration and permissions.');
+        out(['ok' => false, 'error' => $created ? 'Account created, but the server could not save your sign-in session. Try logging in.' : 'The server could not save your sign-in session. Please try again or contact the site administrator.'], 503);
+    }
+    out(['ok' => true, 'user' => $name]);
+}
 
 switch ($action) {
     case 'status': {
@@ -173,16 +191,24 @@ switch ($action) {
     case 'register': {
         $n = cleanName((string)($in['username'] ?? '')); $p = (string)($in['password'] ?? '');
         if (strlen($n) < 3 || strlen($n) > 24 || strlen($p) < 6) out(['ok' => false, 'error' => 'Username 3-24 characters, password 6+ characters.'], 400);
-        if ($store->findUser($n)) out(['ok' => false, 'error' => 'That username is taken.'], 409);
-        $id = $store->createUser($n, password_hash($p, PASSWORD_DEFAULT));
-        session_regenerate_id(true); $_SESSION['uid'] = $id; $_SESSION['uname'] = $n;
-        out(['ok' => true, 'user' => $n]);
+        if (strlen($p) > 72) out(['ok' => false, 'error' => 'Password must be at most 72 bytes.'], 400);
+        try {
+            if ($store->findUser($n)) out(['ok' => false, 'error' => 'That username is taken.'], 409);
+            $id = $store->createUser($n, password_hash($p, PASSWORD_DEFAULT));
+        } catch (Throwable $e) {
+            error_log('Zoo API: account creation failed (' . get_class($e) . ').');
+            out(['ok' => false, 'error' => 'The server could not create the account. Please try again or contact the site administrator.'], 500);
+        }
+        signIn($id, $n, true);
     }
     case 'login': {
-        $u = $store->findUser(cleanName((string)($in['username'] ?? '')));
+        try { $u = $store->findUser(cleanName((string)($in['username'] ?? ''))); }
+        catch (Throwable $e) {
+            error_log('Zoo API: account lookup failed (' . get_class($e) . ').');
+            out(['ok' => false, 'error' => 'The server could not check the account. Please try again or contact the site administrator.'], 500);
+        }
         if (!$u || !password_verify((string)($in['password'] ?? ''), $u['hash'])) out(['ok' => false, 'error' => 'Wrong username or password.'], 401);
-        session_regenerate_id(true); $_SESSION['uid'] = $u['id']; $_SESSION['uname'] = $u['name'];
-        out(['ok' => true, 'user' => $u['name']]);
+        signIn($u['id'], $u['name'], false);
     }
     case 'logout': { session_destroy(); out(['ok' => true]); }
     case 'save': {

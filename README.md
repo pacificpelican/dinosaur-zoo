@@ -14,6 +14,8 @@ then open <http://127.0.0.1:8099/index.html>. Any static file server also works:
 
 Optional backend settings (storage driver, Ollama / cloud LLM) live in `config.php`; override them in an untracked `config.local.php` (see `config.local.example.php`).
 
+On shared hosting, account sign-in also requires working PHP sessions and browser cookies; a MySQL status alone does not verify session storage. If sign-in cannot be verified, check the host's PHP error log and its session save path and permissions. Do not expose credentials or session files in the web root.
+
 ## Play
 
 - Buy admission at the gate (box office, 9 am to 9 pm), then explore. A day is about 5 minutes open; the night fast-forwards. Sleep at Hotel Cretaceous (outside the gate) to skip to morning.

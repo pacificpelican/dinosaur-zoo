@@ -1,7 +1,7 @@
 /* DOM layer: toasts, speech bubbles, modals, dialogue, viewing-window overlay and the Zoo Phone (settings). */
 (function (Z) {
   const $ = (id) => document.getElementById(id);
-  const U = Z.UI = { bubbles: [], phoneTab: 'stats', dlg: null, photos: [], tvSpecies: 'trex' };
+  const U = Z.UI = { bubbles: [], phoneTab: 'stats', dlg: null, photos: [], tvSpecies: 'trex', accountMessage: '', accountBusy: false };
   const show = (id) => $(id).classList.remove('hidden'), hide = (id) => {
     if (id === 'mPhone') {
       Z.PhoneChase.dispose();
@@ -200,9 +200,10 @@
     if (U.phoneTab === 'acct') {
       h = '<h3>Account</h3>' + kv([['Playing as', Z.esc(G.name)], ['Signed in', Z.Net.user ? Z.esc(Z.Net.user) : (Z.Net.php ? 'No (guest)' : 'Guest (no PHP backend)')]]) +
         '<p><label class="row">Display name <input id="acName" maxlength="18" value="' + Z.esc(G.name) + '"></label></p><p>' + btn('acSet', 'Save name') + '</p>';
-      if (Z.Net.php && Z.Net.user) h += '<h3>Server account</h3><p class="note">You are signed in as <b>' + Z.esc(Z.Net.user) + '</b>. Server saves are available for this account.</p><p>' + btn('acOut', 'Log out', 'ghost') + '</p><p class="note" id="acMsg"></p>';
-      else if (Z.Net.php) h += '<h3>Server account</h3><p class="note">Optional: sign in to keep saves on the server.</p><div class="col" style="gap:4px"><input id="acU" placeholder="username" maxlength="24"><input id="acP" type="password" placeholder="password"></div><p class="row">' + btn('acLogin', 'Log in') + btn('acReg', 'Register', 'alt') + '</p><p class="note" id="acMsg"></p>';
-      else h += '<p class="note">No PHP backend detected, so accounts are unavailable. Your progress is saved in this browser.</p>';
+      if (Z.Net.php && Z.Net.user) h += '<h3>Server account</h3><p class="note">You are signed in as <b>' + Z.esc(Z.Net.user) + '</b>. Server saves are available for this account.</p><p>' + btn('acOut', 'Log out', 'ghost') + '</p>';
+      else if (Z.Net.php) h += '<h3>Server account</h3><p class="note">Optional: sign in to keep saves on the server. Usernames must be 3–24 letters, numbers, spaces, underscores or hyphens; passwords must be at least 6 characters.</p><div class="col" style="gap:4px"><input id="acU" type="text" aria-label="Username" autocomplete="username" placeholder="username" maxlength="24"><input id="acP" type="password" aria-label="Password" autocomplete="current-password" placeholder="password"></div><p class="row">' + btn('acLogin', 'Log in') + btn('acReg', 'Register', 'alt') + '</p>';
+      else h += '<p class="note">' + (Z.Net.backendError ? Z.esc(Z.Net.backendError) : 'No PHP backend detected, so accounts are unavailable.') + ' Your progress is saved in this browser.</p>';
+      h += '<p class="account-message" id="acMsg" role="status" aria-live="polite">' + Z.esc(U.accountMessage) + '</p>';
     } else if (U.phoneTab === 'tv') {
       const species = Z.Species.data.base.concat(Z.Species.data.rediscovered);
       const sp = species.find((s) => s.id === U.tvSpecies) || species.find((s) => s.id === 'trex') || species[0];
@@ -256,6 +257,7 @@
         '<p class="note"><b>Last updated:</b> November 5, 2026.</p>';
     }
     s.innerHTML = h;
+    if (U.accountBusy) ['acLogin', 'acReg', 'acOut'].forEach((id) => { if ($(id)) $(id).disabled = true; });
     if (U.phoneTab === 'chase') Z.PhoneChase.mount();
     if ($('svLoadBrowser')) $('svLoadBrowser').disabled = !Z.Net.hasLocal();
     if ($('tvSpecies')) {
@@ -265,8 +267,47 @@
       };
     }
     on('acSet', () => { G.name = ($('acName').value || 'Player 1').slice(0, 18); st.name = G.name; $('badge').textContent = G.name; U.toast('Name saved'); });
-    const auth = async (a) => { try { const r = await Z.Net.api(a, { username: $('acU').value, password: $('acP').value }); $('acMsg').textContent = r.ok ? 'Done.' : (r.error || 'Failed'); if (r.ok) { await Z.Net.detect(); U.renderPhone(); } } catch (e) { $('acMsg').textContent = 'Backend error'; } };
-    on('acLogin', () => auth('login')); on('acReg', () => auth('register')); on('acOut', async () => { try { await Z.Net.api('logout', {}); } catch (e) { /* ignore */ } await Z.Net.detect(); U.renderPhone(); });
+    const accountMessage = (message) => { U.accountMessage = message; if (U.phoneTab === 'acct' && $('acMsg')) $('acMsg').textContent = message; };
+    const auth = async (action) => {
+      if (U.accountBusy) return;
+      const username = $('acU').value, password = $('acP').value;
+      U.accountBusy = true; $('acLogin').disabled = true; $('acReg').disabled = true;
+      accountMessage(action === 'register' ? 'Creating account...' : 'Signing in...');
+      try {
+        const r = await Z.Net.api(action, { username, password });
+        if (!r || r.ok !== true) { accountMessage(r && r.error ? r.error : 'Account request failed. Please try again.'); return; }
+        const detected = await Z.Net.detect();
+        if (!detected || !Z.Net.user) {
+          accountMessage((action === 'register' ? 'Account created, but sign-in' : 'Sign-in') + ' could not be verified. Check that cookies are enabled and try logging in.');
+        } else accountMessage(action === 'register' ? 'Account created and signed in.' : 'Signed in successfully.');
+        if (U.phoneTab === 'acct' && !$('mPhone').classList.contains('hidden')) U.renderPhone();
+      } catch (e) {
+        accountMessage('Could not complete the account request. Please check your connection and try again.');
+        console.error('Account request failed:', e);
+      } finally {
+        U.accountBusy = false;
+        if ($('acLogin')) $('acLogin').disabled = false;
+        if ($('acReg')) $('acReg').disabled = false;
+      }
+    };
+    on('acLogin', () => auth('login')); on('acReg', () => auth('register'));
+    on('acOut', async () => {
+      if (U.accountBusy) return;
+      U.accountBusy = true; $('acOut').disabled = true; accountMessage('Signing out...');
+      try {
+        const r = await Z.Net.api('logout', {});
+        if (!r || r.ok !== true) { accountMessage(r && r.error ? r.error : 'Sign-out failed. Please try again.'); return; }
+        const detected = await Z.Net.detect();
+        accountMessage(!detected ? 'Sign-out could not be verified. Please check your connection.' : Z.Net.user ? 'Sign-out could not be verified. Please try again.' : 'Signed out.');
+        if (U.phoneTab === 'acct' && !$('mPhone').classList.contains('hidden')) U.renderPhone();
+      } catch (e) {
+        accountMessage('Could not sign out. Please check your connection and try again.');
+        console.error('Sign-out failed:', e);
+      } finally {
+        U.accountBusy = false;
+        if ($('acOut')) $('acOut').disabled = false;
+      }
+    });
     on('stFund', () => { G.fundResearch(); U.renderPhone(); });
     if ($('stGal')) $('stGal').onclick = (e) => { if (e.target.dataset.i) U.shotPreview(U.photos[+e.target.dataset.i]); };
     on('svSave', async () => { const r = await G.save(); $('svMsg').textContent = r.ok ? 'Saved to ' + r.where + '.' : 'Save failed.'; });
