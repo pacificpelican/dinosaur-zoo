@@ -250,7 +250,7 @@ switch ($action) {
         }
         $msgs[] = ['role' => 'user', 'content' => substr((string)($in['message'] ?? ''), 0, 400)];
         $r = aiComplete($CONFIG, $tier, $msgs);
-        if (!$r) out(['ok' => false, 'tier' => 'fallback', 'error' => 'The AI service did not return a response.']);
+        if (!$r) out(['ok' => false, 'tier' => 'fallback', 'error' => 'The AI service did not return a response. It may have timed out after ' . (int)$CONFIG['ai']['timeout'] . ' seconds or returned an error; check the server and AI service logs.']);
         out(['ok' => true, 'tier' => $tier, 'reply' => trim($r)]);
     }
     case 'species': {

@@ -16,6 +16,6 @@ return array_replace_recursive([
         'tier'   => 'auto', // auto | ollama | cloud | off
         'ollama' => ['url' => 'http://127.0.0.1:11434', 'model' => 'llama3.2'],
         'cloud'  => ['url' => '', 'key' => '', 'model' => ''], // any OpenAI-compatible /chat/completions endpoint
-        'timeout' => 12,
+        'timeout' => 12, // seconds
     ],
 ], is_file(__DIR__ . '/config.local.php') ? (require __DIR__ . '/config.local.php') : []);

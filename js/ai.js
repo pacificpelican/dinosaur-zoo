@@ -1,6 +1,6 @@
 /* NPC conversation: Tier 1/2 via PHP (Ollama or cloud) when available, Tier 3 deterministic rules from data/dialogue.json. */
 (function (Z) {
-  const T = Z.Talk = { data: null, lastTier: 'fallback' };
+  const T = Z.Talk = { data: null, lastTier: null };
   const fill = (s, v) => s.replace(/\{(\w+)\}/g, (m, k) => (v[k] !== undefined ? v[k] : m));
 
   T.vars = function () {

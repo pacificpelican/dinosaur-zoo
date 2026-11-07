@@ -13,6 +13,7 @@ php -S 127.0.0.1:8099 -t .
 then open <http://127.0.0.1:8099/index.html>. Any static file server also works: **PHP is optional**. Without it, saves go to `localStorage`, accounts are hidden, and dialogue uses the rule-based engine (Settings > Debug shows which mode is active).
 
 Optional backend settings (storage driver, Ollama / cloud LLM) live in `config.php`; override them in an untracked `config.local.php` (see `config.local.example.php`).
+Debug's AI mode indicates service availability, while the last dialogue tier reports the engine used for the most recent reply. Ollama can take a while to load a model on the first request; the AI timeout defaults to 12 seconds and can be changed with `ai.timeout` in `config.local.php`. If a reply falls back, check Debug's last error and the PHP and Ollama logs.
 If configured MySQL storage is unavailable, the server reports an error rather than silently switching account and save storage. Browser-only play remains available.
 
 On shared hosting, account sign-in also requires working PHP sessions and browser cookies; a MySQL status alone does not verify session storage. For PHP's file-based session handler, the game tries an installation-specific directory under `tmp_sessions` above the document root, then an installation-specific system temporary directory, and finally the PHP-configured default. The PHP process must be able to create and write to one of these locations. If sign-in cannot be verified, check the host's PHP error log, directory permissions, and cookie settings.
